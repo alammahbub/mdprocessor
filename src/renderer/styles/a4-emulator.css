@@ -1,0 +1,182 @@
+:root {
+  --canvas-bg: #f3f2f1;
+  --page-bg: #ffffff;
+  --text-color: #323130;
+  --header-footer-color: #a19f9d;
+  --primary-accent: #2b579a;
+  
+  /* Slate dark theme properties */
+  --dark-canvas-bg: #1e1e1e;
+  --dark-page-bg: #121212;
+  --dark-text-color: #e0e0e0;
+  --dark-header-footer-color: #605e5c;
+  --dark-primary-accent: #0078d4;
+}
+
+body.dark-mode {
+  --canvas-bg: var(--dark-canvas-bg);
+  --page-bg: var(--dark-page-bg);
+  --text-color: var(--dark-text-color);
+  --header-footer-color: var(--dark-header-footer-color);
+  --primary-accent: var(--dark-primary-accent);
+}
+
+.novawriter-canvas-scroller {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: var(--canvas-bg);
+  transition: background-color 0.25s ease;
+}
+
+.novawriter-canvas {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  min-width: calc(210mm + 40px); /* Keep centering from clipping left edges when overflowing */
+}
+
+/* Paginated A4 Simulator block styling */
+.novawriter-page {
+  background-color: var(--page-bg);
+  color: var(--text-color);
+  width: 210mm;
+  min-height: 297mm;
+  position: relative;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.25s ease, padding 0.2s ease, box-shadow 0.25s ease;
+}
+
+.dark-mode .novawriter-page {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* Margin types */
+.margin-normal {
+  padding: 25mm 25mm 25mm 25mm;
+}
+
+.margin-narrow {
+  padding: 12.7mm 12.7mm 12.7mm 12.7mm;
+}
+
+.margin-wide {
+  padding: 38.1mm 38.1mm 38.1mm 38.1mm;
+}
+
+/* Header & Footer elements */
+.novawriter-page-header {
+  position: absolute;
+  top: 8mm;
+  left: 20mm;
+  right: 20mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--header-footer-color);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  padding-bottom: 3px;
+  pointer-events: none;
+}
+
+.novawriter-page-footer {
+  position: absolute;
+  bottom: 8mm;
+  left: 20mm;
+  right: 20mm;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--header-footer-color);
+  border-top: 1px solid rgba(0, 0, 0, 0.05);
+  padding-top: 3px;
+  pointer-events: none;
+}
+
+/* Core Tiptap / ProseMirror Document Styles */
+.novawriter-page-content {
+  flex: 1;
+  width: 100%;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 11pt;
+  line-height: 1.5;
+  color: var(--text-color);
+  outline: none;
+}
+
+.novawriter-page-content p {
+  margin-top: 0;
+  margin-bottom: 8pt;
+}
+
+.novawriter-page-content h1 {
+  font-size: 22pt;
+  color: var(--primary-accent);
+  margin-top: 12pt;
+  margin-bottom: 6pt;
+  font-weight: 600;
+}
+
+.novawriter-page-content h2 {
+  font-size: 16pt;
+  color: var(--primary-accent);
+  margin-top: 12pt;
+  margin-bottom: 4pt;
+  font-weight: 500;
+}
+
+.novawriter-page-content h3 {
+  font-size: 13pt;
+  margin-top: 10pt;
+  margin-bottom: 2pt;
+  font-weight: 500;
+}
+
+.novawriter-page-content blockquote {
+  border-left: 3px solid var(--primary-accent);
+  padding-left: 12px;
+  margin-left: 0;
+  margin-right: 0;
+  font-style: italic;
+  color: #605e5c;
+}
+
+.novawriter-page-content ul, 
+.novawriter-page-content ol {
+  margin-top: 0;
+  margin-bottom: 8pt;
+  padding-left: 20px;
+}
+
+.novawriter-page-content code {
+  background-color: rgba(0, 0, 0, 0.04);
+  padding: 2px 4px;
+  border-radius: 4px;
+  font-family: Consolas, monospace;
+  font-size: 90%;
+}
+
+.novawriter-code-block {
+  background-color: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  padding: 12px !important;
+  border-radius: 6px !important;
+  font-family: Consolas, monospace !important;
+  font-size: 9.5pt !important;
+  overflow-x: auto !important;
+  margin: 10px 0 !important;
+}
+
+/* Custom horizontal line rule */
+.novawriter-page-content hr {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  margin: 15pt 0;
+}

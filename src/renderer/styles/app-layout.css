@@ -1,0 +1,156 @@
+.novawriter-app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  background-color: #ffffff;
+  color: #323130;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.25s, color 0.25s;
+}
+
+.novawriter-app-container.dark-mode {
+  background-color: #1e1e1e;
+  color: #cccccc;
+}
+
+/* Workspace Panels */
+.novawriter-workspace {
+  flex: 1;
+  display: flex;
+  width: 100%;
+  height: calc(100% - 140px); /* Adjusting for ribbon + title bar + status bar */
+  overflow: hidden;
+  background-color: #f3f2f1;
+  transition: background-color 0.25s;
+}
+
+.dark-mode .novawriter-workspace {
+  background-color: #252526;
+}
+
+.workspace-panel {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.word-panel {
+  background-color: var(--canvas-bg);
+}
+
+.markdown-panel {
+  background-color: #1e1e1e;
+  border-left: 1px solid #d2d0ce;
+}
+
+.dark-mode .markdown-panel {
+  border-color: #3c3c3c;
+}
+
+/* Markdown Controls Header Row */
+.markdown-settings-row {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background-color: #2d3139;
+  border-bottom: 1px solid #1e1e1e;
+  color: #abb2bf;
+  font-size: 11px;
+}
+
+.markdown-settings-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.markdown-settings-row input[type="checkbox"] {
+  accent-color: #2b579a;
+}
+
+.dark-mode .markdown-settings-row input[type="checkbox"] {
+  accent-color: #0078d4;
+}
+
+/* Status Bar */
+.novawriter-status-bar {
+  height: 24px;
+  background-color: #2b579a;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  font-size: 11px;
+  font-weight: 500;
+  transition: background-color 0.25s;
+}
+
+.dark-mode .novawriter-status-bar {
+  background-color: #0078d4;
+}
+
+.status-bar-left, 
+.status-bar-center, 
+.status-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-divider {
+  opacity: 0.4;
+}
+
+.sync-status-marker {
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.sync-status-marker.synchronized {
+  color: #107c41;
+}
+
+.dark-mode .sync-status-marker.synchronized {
+  color: #8ce8a3;
+}
+
+/* Toast Notifications */
+.novawriter-toast {
+  position: fixed;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(43, 87, 154, 0.9);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  padding: 10px 24px;
+  border-radius: 20px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  font-size: 12px;
+  font-weight: 600;
+  animation: slideUpFade 0.3s ease-out;
+}
+
+.dark-mode .novawriter-toast {
+  background: rgba(0, 120, 212, 0.9);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
