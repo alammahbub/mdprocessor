@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { RibbonToolbar } from './renderer/components/RibbonToolbar'
 import { WordEditor } from './renderer/components/WordEditor'
 import { MarkdownEditor } from './renderer/components/MarkdownEditor'
@@ -53,8 +53,8 @@ function App() {
   const [selectionTick, setSelectionTick] = useState<number>(0)
   const triggerSelectionTick = () => setSelectionTick((t) => t + 1)
 
-  // Editor instance reference from WordEditor
-  const wordEditorRef = useRef<any>(null)
+  // Editor instance state from WordEditor
+  const [editorInstance, setEditorInstance] = useState<any>(null)
 
   // Show status popup toast
   const triggerToast = (msg: string) => {
@@ -111,8 +111,8 @@ function App() {
 
   const handleExportPDF = async () => {
     try {
-      if (window.electronAPI && wordEditorRef.current && !wordEditorRef.current.isDestroyed) {
-        const pageHtml = wordEditorRef.current.getHTML()
+      if (window.electronAPI && editorInstance && !editorInstance.isDestroyed) {
+        const pageHtml = editorInstance.getHTML()
         // Wrap with premium styles to ensure print outputs look correct
         const styledPrintHtml = `
           <html>
@@ -206,9 +206,15 @@ function App() {
 
   // Tiptap Command wrappers executed directly on the in-memory ProseMirror instance
   const runCommand = (command: (editor: any) => void) => {
-    const editor = wordEditorRef.current
+    const editor = editorInstance
+    console.log('[runCommand] Executing editor command. Editor exists:', !!editor, 'isDestroyed:', editor?.isDestroyed)
     if (editor && !editor.isDestroyed && editor.commands) {
-      command(editor)
+      try {
+        command(editor)
+        console.log('[runCommand] Command execution succeeded.')
+      } catch (err) {
+        console.error('[runCommand] Error executing editor command:', err)
+      }
     }
   }
 
@@ -218,7 +224,7 @@ function App() {
       <RibbonToolbar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        editor={wordEditorRef.current}
+        editor={editorInstance}
         selectionTick={selectionTick}
         onBold={() => runCommand((e) => e.chain().focus().toggleBold().run())}
         onItalic={() => runCommand((e) => e.chain().focus().toggleItalic().run())}
@@ -299,7 +305,7 @@ function App() {
               marginType={marginType}
               isFocused={true}
               onEditorReady={(editor) => {
-                wordEditorRef.current = editor
+                setEditorInstance(editor)
               }}
               onSelectionChange={triggerSelectionTick}
             />

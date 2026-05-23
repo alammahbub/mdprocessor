@@ -1,5 +1,93 @@
-import React from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import '../styles/ribbon.css'
+
+interface DropdownOption {
+  value: string
+  label: string
+  style?: React.CSSProperties
+}
+
+interface RibbonDropdownProps {
+  value: string
+  options: DropdownOption[]
+  onChange: (val: string) => void
+  title: string
+  className?: string
+  style?: React.CSSProperties
+  triggerStyle?: React.CSSProperties
+  isColorPicker?: boolean
+}
+
+const RibbonDropdown: React.FC<RibbonDropdownProps> = ({
+  value,
+  options,
+  onChange,
+  title,
+  className = '',
+  style = {},
+  triggerStyle = {},
+  isColorPicker = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
+
+  const selectedOption = options.find(o => o.value === value)
+
+  return (
+    <div className={`ribbon-dropdown-container ${className}`} style={style} ref={dropdownRef}>
+      <button
+        type="button"
+        className={`ribbon-dropdown-trigger ${isOpen ? 'open' : ''} ${isColorPicker ? 'color-picker-trigger' : ''}`}
+        style={triggerStyle}
+        onMouseDown={(e) => {
+          e.preventDefault() // Crucial! Keeps editor selection active!
+          setIsOpen(!isOpen)
+        }}
+        title={title}
+      >
+        <span className="dropdown-trigger-text">
+          {isColorPicker ? (
+            <span className="color-indicator-char" style={{ borderBottom: `3px solid ${value}` }}>A</span>
+          ) : (
+            selectedOption?.label || value
+          )}
+        </span>
+        <span className="dropdown-arrow">▼</span>
+      </button>
+      {isOpen && (
+        <div className="ribbon-dropdown-menu">
+          {options.map((opt) => (
+            <div
+              key={opt.value}
+              className={`ribbon-dropdown-item ${opt.value === value ? 'selected' : ''}`}
+              style={opt.style}
+              onMouseDown={(e) => {
+                e.preventDefault() // Crucial! Keeps editor selection active!
+                onChange(opt.value)
+                setIsOpen(false)
+              }}
+            >
+              {opt.label}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
 
 interface RibbonToolbarProps {
   activeTab: string
@@ -160,9 +248,9 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Clipboard</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn text-btn" onClick={onCut} onMouseDown={(e) => e.preventDefault()} title="Cut Selection (Ctrl+X)">Cut</button>
-                <button className="ribbon-tool-btn text-btn" onClick={onCopy} onMouseDown={(e) => e.preventDefault()} title="Copy Selection (Ctrl+C)">Copy</button>
-                <button className="ribbon-tool-btn text-btn" onClick={onPaste} onMouseDown={(e) => e.preventDefault()} title="Paste Clipboard (Ctrl+V)">Paste</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onCut(); }} title="Cut Selection (Ctrl+X)">Cut</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onCopy(); }} title="Copy Selection (Ctrl+C)">Copy</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onPaste(); }} title="Paste Clipboard (Ctrl+V)">Paste</button>
               </div>
             </div>
 
@@ -170,8 +258,8 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Undo & Redo</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn" onClick={onUndo} onMouseDown={(e) => e.preventDefault()} title="Undo Last Change (Ctrl+Z)" style={{ fontSize: '16px' }}>↶</button>
-                <button className="ribbon-tool-btn" onClick={onRedo} onMouseDown={(e) => e.preventDefault()} title="Redo Last Change (Ctrl+Y)" style={{ fontSize: '16px' }}>↷</button>
+                <button className="ribbon-tool-btn" onMouseDown={(e) => { e.preventDefault(); onUndo(); }} title="Undo Last Change (Ctrl+Z)" style={{ fontSize: '16px' }}>↶</button>
+                <button className="ribbon-tool-btn" onMouseDown={(e) => { e.preventDefault(); onRedo(); }} title="Redo Last Change (Ctrl+Y)" style={{ fontSize: '16px' }}>↷</button>
               </div>
             </div>
 
@@ -181,92 +269,98 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
               
               {/* Dropdowns row */}
               <div className="ribbon-group-row" style={{ marginBottom: '4px' }}>
-                <select 
-                  className="ribbon-dropdown font-family-select"
+                <RibbonDropdown
                   value={activeFontFamily}
-                  onChange={(e) => onFontFamily(e.target.value)}
+                  onChange={onFontFamily}
                   title="Font Family"
-                >
-                  <option value="Arial">Arial</option>
-                  <option value="Segoe UI">Segoe UI</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Courier New">Courier New</option>
-                  <option value="Times New Roman">Times New Roman</option>
-                  <option value="Verdana">Verdana</option>
-                  <option value="Trebuchet MS">Trebuchet MS</option>
-                  <option value="Arial Black">Arial Black</option>
-                </select>
+                  className="font-family-dropdown"
+                  options={[
+                    { value: 'Arial', label: 'Arial' },
+                    { value: 'Segoe UI', label: 'Segoe UI' },
+                    { value: 'Georgia', label: 'Georgia' },
+                    { value: 'Courier New', label: 'Courier New' },
+                    { value: 'Times New Roman', label: 'Times New Roman' },
+                    { value: 'Verdana', label: 'Verdana' },
+                    { value: 'Trebuchet MS', label: 'Trebuchet MS' },
+                    { value: 'Arial Black', label: 'Arial Black' },
+                  ]}
+                />
 
-                <select 
-                  className="ribbon-dropdown font-size-select"
+                <RibbonDropdown
                   value={activeFontSize}
-                  onChange={(e) => onFontSize(e.target.value)}
+                  onChange={onFontSize}
                   title="Font Size (pt)"
-                >
-                  <option value="8">8</option>
-                  <option value="9">9</option>
-                  <option value="10">10</option>
-                  <option value="11">11</option>
-                  <option value="12">12</option>
-                  <option value="14">14</option>
-                  <option value="16">16</option>
-                  <option value="18">18</option>
-                  <option value="20">20</option>
-                  <option value="24">24</option>
-                  <option value="28">28</option>
-                  <option value="36">36</option>
-                  <option value="48">48</option>
-                  <option value="72">72</option>
-                </select>
+                  className="font-size-dropdown"
+                  options={[
+                    { value: '8', label: '8' },
+                    { value: '9', label: '9' },
+                    { value: '10', label: '10' },
+                    { value: '11', label: '11' },
+                    { value: '12', label: '12' },
+                    { value: '14', label: '14' },
+                    { value: '16', label: '16' },
+                    { value: '18', label: '18' },
+                    { value: '20', label: '20' },
+                    { value: '24', label: '24' },
+                    { value: '28', label: '28' },
+                    { value: '36', label: '36' },
+                    { value: '48', label: '48' },
+                    { value: '72', label: '72' },
+                  ]}
+                />
               </div>
 
               {/* Formatting and color buttons row */}
               <div className="ribbon-group-row">
-                <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onClick={onBold} onMouseDown={(e) => e.preventDefault()} title="Bold (Ctrl+B)">B</button>
-                <button className={`ribbon-tool-btn font-italic ${isItalic ? 'active' : ''}`} onClick={onItalic} onMouseDown={(e) => e.preventDefault()} title="Italic (Ctrl+I)">I</button>
-                <button className={`ribbon-tool-btn font-underline ${isUnderline ? 'active' : ''}`} onClick={onUnderline} onMouseDown={(e) => e.preventDefault()} title="Underline (Ctrl+U)">U</button>
-                <button className={`ribbon-tool-btn font-strike ${isStrike ? 'active' : ''}`} onClick={onStrike} onMouseDown={(e) => e.preventDefault()} title="Strikethrough">S</button>
+                <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onBold(); }} title="Bold (Ctrl+B)">B</button>
+                <button className={`ribbon-tool-btn font-italic ${isItalic ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onItalic(); }} title="Italic (Ctrl+I)">I</button>
+                <button className={`ribbon-tool-btn font-underline ${isUnderline ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onUnderline(); }} title="Underline (Ctrl+U)">U</button>
+                <button className={`ribbon-tool-btn font-strike ${isStrike ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onStrike(); }} title="Strikethrough">S</button>
                 
                 <span className="ribbon-tool-divider"></span>
 
                 {/* Font Color select picker */}
                 <div className="color-tool-wrapper">
-                  <select
-                    className="font-color-picker"
+                  <RibbonDropdown
                     value={activeColor}
-                    onChange={(e) => onTextColor(e.target.value)}
+                    onChange={onTextColor}
                     title="Text Color"
-                    style={{ borderBottom: `3px solid ${activeColor}` }}
-                  >
-                    <option value="#323130" style={{ color: '#323130' }}>A - Black</option>
-                    <option value="#2b579a" style={{ color: '#2b579a' }}>A - Blue</option>
-                    <option value="#0078d4" style={{ color: '#0078d4' }}>A - Cyan</option>
-                    <option value="#a80000" style={{ color: '#a80000' }}>A - Red</option>
-                    <option value="#107c41" style={{ color: '#107c41' }}>A - Green</option>
-                    <option value="#d83b01" style={{ color: '#d83b01' }}>A - Orange</option>
-                    <option value="#e3008c" style={{ color: '#e3008c' }}>A - Pink</option>
-                    <option value="#7a24db" style={{ color: '#7a24db' }}>A - Purple</option>
-                    <option value="#5c6370" style={{ color: '#5c6370' }}>A - Gray</option>
-                  </select>
+                    isColorPicker={true}
+                    options={[
+                      { value: '#323130', label: 'Black', style: { color: '#323130' } },
+                      { value: '#2b579a', label: 'Blue', style: { color: '#2b579a' } },
+                      { value: '#0078d4', label: 'Cyan', style: { color: '#0078d4' } },
+                      { value: '#a80000', label: 'Red', style: { color: '#a80000' } },
+                      { value: '#107c41', label: 'Green', style: { color: '#107c41' } },
+                      { value: '#d83b01', label: 'Orange', style: { color: '#d83b01' } },
+                      { value: '#e3008c', label: 'Pink', style: { color: '#e3008c' } },
+                      { value: '#7a24db', label: 'Purple', style: { color: '#7a24db' } },
+                      { value: '#5c6370', label: 'Gray', style: { color: '#5c6370' } },
+                    ]}
+                  />
                 </div>
 
                 {/* Highlight Color picker */}
                 <div className="color-tool-wrapper">
-                  <select
-                    className="highlight-color-picker"
+                  <RibbonDropdown
                     value={activeHighlightColor}
-                    onChange={(e) => onHighlightColor(e.target.value)}
+                    onChange={onHighlightColor}
                     title="Highlight Color"
-                    style={{ backgroundColor: activeHighlightColor === 'transparent' ? 'transparent' : activeHighlightColor }}
-                  >
-                    <option value="transparent">None</option>
-                    <option value="#ffff00" style={{ backgroundColor: '#ffff00' }}>Yellow</option>
-                    <option value="#00ff00" style={{ backgroundColor: '#00ff00' }}>Green</option>
-                    <option value="#00ffff" style={{ backgroundColor: '#00ffff' }}>Cyan</option>
-                    <option value="#ff00ff" style={{ backgroundColor: '#ff00ff' }}>Pink</option>
-                    <option value="#ff0000" style={{ backgroundColor: '#ff0000', color: '#ffffff' }}>Red</option>
-                    <option value="#b5f5ec" style={{ backgroundColor: '#b5f5ec' }}>Soft Mint</option>
-                  </select>
+                    className="highlight-dropdown"
+                    triggerStyle={{
+                      backgroundColor: activeHighlightColor === 'transparent' ? 'transparent' : activeHighlightColor,
+                      border: '1px solid #d2d0ce',
+                    }}
+                    options={[
+                      { value: 'transparent', label: 'None' },
+                      { value: '#ffff00', label: 'Yellow', style: { backgroundColor: '#ffff00' } },
+                      { value: '#00ff00', label: 'Green', style: { backgroundColor: '#00ff00' } },
+                      { value: '#00ffff', label: 'Cyan', style: { backgroundColor: '#00ffff' } },
+                      { value: '#ff00ff', label: 'Pink', style: { backgroundColor: '#ff00ff' } },
+                      { value: '#ff0000', label: 'Red', style: { backgroundColor: '#ff0000', color: '#ffffff' } },
+                      { value: '#b5f5ec', label: 'Soft Mint', style: { backgroundColor: '#b5f5ec' } },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
@@ -275,16 +369,16 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Paragraph</div>
               <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
-                <button className={`ribbon-tool-btn ${isLeftAlign ? 'active' : ''}`} onClick={() => onAlignText('left')} onMouseDown={(e) => e.preventDefault()} title="Align Left">
+                <button className={`ribbon-tool-btn ${isLeftAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('left'); }} title="Align Left">
                   ⫷
                 </button>
-                <button className={`ribbon-tool-btn ${isCenterAlign ? 'active' : ''}`} onClick={() => onAlignText('center')} onMouseDown={(e) => e.preventDefault()} title="Align Center">
+                <button className={`ribbon-tool-btn ${isCenterAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('center'); }} title="Align Center">
                   ☷
                 </button>
-                <button className={`ribbon-tool-btn ${isRightAlign ? 'active' : ''}`} onClick={() => onAlignText('right')} onMouseDown={(e) => e.preventDefault()} title="Align Right">
+                <button className={`ribbon-tool-btn ${isRightAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('right'); }} title="Align Right">
                   ⫸
                 </button>
-                <button className={`ribbon-tool-btn ${isJustifyAlign ? 'active' : ''}`} onClick={() => onAlignText('justify')} onMouseDown={(e) => e.preventDefault()} title="Justify">
+                <button className={`ribbon-tool-btn ${isJustifyAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('justify'); }} title="Justify">
                   ☰
                 </button>
               </div>
@@ -294,10 +388,10 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Styles</div>
               <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
-                <button className="ribbon-tool-btn text-btn" onClick={onParagraph} onMouseDown={(e) => e.preventDefault()}>Normal Text</button>
-                <button className="ribbon-tool-btn text-btn" onClick={() => onHeading(1)} onMouseDown={(e) => e.preventDefault()}>H1</button>
-                <button className="ribbon-tool-btn text-btn" onClick={() => onHeading(2)} onMouseDown={(e) => e.preventDefault()}>H2</button>
-                <button className="ribbon-tool-btn text-btn" onClick={() => onHeading(3)} onMouseDown={(e) => e.preventDefault()}>H3</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onParagraph(); }}>Normal Text</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onHeading(1); }}>H1</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onHeading(2); }}>H2</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onHeading(3); }}>H3</button>
               </div>
             </div>
 
@@ -305,8 +399,8 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Structure</div>
               <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
-                <button className="ribbon-tool-btn text-btn" onClick={onBlockquote} onMouseDown={(e) => e.preventDefault()}>Blockquote</button>
-                <button className="ribbon-tool-btn text-btn" onClick={onHorizontalRule} onMouseDown={(e) => e.preventDefault()}>Divider Line</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onBlockquote(); }}>Blockquote</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onHorizontalRule(); }}>Divider Line</button>
               </div>
             </div>
           </div>
@@ -318,7 +412,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Tables</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onClick={onInsertTable} onMouseDown={(e) => e.preventDefault()} title="Insert Table Grid">
+                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertTable(); }} title="Insert Table Grid">
                   <span className="btn-icon">📅</span>
                   <span className="btn-text">Insert Table</span>
                 </button>
@@ -329,7 +423,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Illustrations & Charts</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onClick={onInsertMermaid} onMouseDown={(e) => e.preventDefault()} title="Insert Mermaid Graph Diagram">
+                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertMermaid(); }} title="Insert Mermaid Graph Diagram">
                   <span className="btn-icon">📊</span>
                   <span className="btn-text">Mermaid Diagram</span>
                 </button>

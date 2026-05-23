@@ -191,12 +191,20 @@ export const WordEditor: React.FC<WordEditorProps> = ({
     if (!editor) return
 
     const currentMarkdown = (editor as any).getMarkdown()
-    if (normalizeMarkdown(value) !== normalizeMarkdown(currentMarkdown)) {
-      // Set text content programmatically specifying markdown parser option
-      editor.commands.setContent(value, {
-        emitUpdate: false,
-        contentType: 'markdown'
-      } as any)
+    const normValue = normalizeMarkdown(value)
+    const normCurrent = normalizeMarkdown(currentMarkdown)
+    
+    if (normValue !== normCurrent) {
+      console.log('[WordEditor Sync] Mismatch detected! Resetting editor content to sync with source of truth.', {
+        valueLength: value.length,
+        currentMarkdownLength: currentMarkdown.length,
+        normValue: normValue.slice(0, 100),
+        normCurrent: normCurrent.slice(0, 100)
+      })
+      // Correct Tiptap signature: setContent(content, options)
+      editor.commands.setContent(value, { emitUpdate: false } as any)
+    } else {
+      console.log('[WordEditor Sync] Content matches after normalization. No reset required.')
     }
   }, [value, editor])
 
