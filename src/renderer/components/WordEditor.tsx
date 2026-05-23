@@ -62,7 +62,7 @@ export const FontSize = Extension.create({
 // Custom TextStyle extension to preserve inline style properties as HTML spans
 export const CustomTextStyle = TextStyle.extend({
   renderMarkdown: (node: any, helpers: any) => {
-    const content = helpers.renderChildren(node)
+    const content = helpers.renderChildren(node.content || [])
     const attrs = node.attrs
     const styles = []
     if (attrs.color) styles.push(`color: ${attrs.color}`)
@@ -79,7 +79,7 @@ export const CustomTextStyle = TextStyle.extend({
 // Custom Highlight extension to preserve background colors as styled mark tags
 export const CustomHighlight = Highlight.extend({
   renderMarkdown: (node: any, helpers: any) => {
-    const content = helpers.renderChildren(node)
+    const content = helpers.renderChildren(node.content || [])
     const color = node.attrs.color
     if (color) {
       return `<mark style="background-color: ${color}">${content}</mark>`
@@ -91,7 +91,7 @@ export const CustomHighlight = Highlight.extend({
 // Custom Paragraph extension to preserve alignments as aligned paragraph tags
 export const CustomParagraph = Paragraph.extend({
   renderMarkdown: (node: any, helpers: any) => {
-    const content = helpers.renderChildren(node)
+    const content = helpers.renderChildren(node.content || [])
     const align = node.attrs.textAlign
     if (align && align !== 'left') {
       return `<p style="text-align: ${align}">${content}</p>\n\n`
@@ -103,7 +103,7 @@ export const CustomParagraph = Paragraph.extend({
 // Custom Heading extension to preserve alignments as aligned heading tags
 export const CustomHeading = Heading.extend({
   renderMarkdown: (node: any, helpers: any) => {
-    const content = helpers.renderChildren(node)
+    const content = helpers.renderChildren(node.content || [])
     const align = node.attrs.textAlign
     const level = node.attrs.level
     if (align && align !== 'left') {
