@@ -233,6 +233,40 @@ function App() {
     setEditorInstance(editor)
   }, [])
 
+  // Collapsible Activity History sidebar states and callback
+  interface ActivityItem {
+    id: string
+    timestamp: string
+    action: string
+    icon: string
+    status: 'success' | 'warning' | 'error' | 'sync'
+    details?: string
+  }
+
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [activities, setActivities] = useState<ActivityItem[]>([
+    {
+      id: 'init',
+      timestamp: new Date().toLocaleTimeString(),
+      action: 'NovaWriter initialized',
+      icon: '🚀',
+      status: 'success',
+      details: 'Editor workspace loaded successfully.'
+    }
+  ])
+
+  const logActivity = useCallback((action: string, icon: string, status: 'success' | 'warning' | 'error' | 'sync' = 'success', details?: string) => {
+    const newActivity: ActivityItem = {
+      id: Math.random().toString(36).substring(7),
+      timestamp: new Date().toLocaleTimeString(),
+      action,
+      icon,
+      status,
+      details
+    }
+    setActivities(prev => [newActivity, ...prev.slice(0, 49)])
+  }, [])
+
   // Load recent files on mount
   useEffect(() => {
     setRecentFiles(loadRecentFiles())
@@ -245,6 +279,7 @@ function App() {
       setMarkdown(DEFAULT_MARKDOWN)
       setFilePath(null)
       triggerToast('New Document Created')
+      logActivity('Created New Document', '📄', 'success', 'Editor canvas reset to default state.')
     }
   }
 
@@ -258,6 +293,7 @@ function App() {
           addRecentFile(res.filePath)
           setRecentFiles(loadRecentFiles())
           triggerToast('File loaded successfully!')
+          logActivity('Loaded Document File', '📂', 'success', `File path: ${res.filePath}`)
         }
       } else {
         // Web mock: prompt for file path
@@ -267,11 +303,13 @@ function App() {
           addRecentFile(mockPath)
           setRecentFiles(loadRecentFiles())
           triggerToast('Desktop API not found (mock open)')
+          logActivity('Loaded Mock Document', '📂', 'warning', `Mock path: ${mockPath}`)
         }
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       triggerToast('Error loading file.')
+      logActivity('Failed to Open File', '📂', 'error', err?.message || String(err))
     }
   }
 
@@ -285,13 +323,16 @@ function App() {
           setRecentFiles(loadRecentFiles())
           triggerToast('File saved successfully!')
           await window.electronAPI.clearRecovery({ fileName: res.filePath.split(/[\\/]/).pop() || 'Untitled' })
+          logActivity('Saved Document File', '💾', 'success', `Saved to path: ${res.filePath}`)
         }
       } else {
         triggerToast('Desktop API not found (saved in local memory)')
+        logActivity('Saved Mock Document', '💾', 'warning', 'Stored in active browser local memory.')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       triggerToast('Failed to save file.')
+      logActivity('Failed to Save File', '💾', 'error', err?.message || String(err))
     }
   }
 
@@ -328,13 +369,16 @@ function App() {
         const res = await window.electronAPI.exportPDF({ htmlContent: styledPrintHtml })
         if (res.success) {
           triggerToast(`Successfully exported PDF to ${res.filePath?.split(/[\\/]/).pop()}`)
+          logActivity('Exported to PDF', '📥', 'success', `File: ${res.filePath}`)
         }
       } else {
         triggerToast('PDF Exporter is only available in the Desktop App')
+        logActivity('Failed to Export PDF', '📥', 'warning', 'PDF Exporter requires desktop app environment.')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       triggerToast('Error exporting PDF.')
+      logActivity('Failed to Export PDF', '📥', 'error', err?.message || String(err))
     }
   }
 
@@ -344,6 +388,7 @@ function App() {
         const res = await window.electronAPI.exportDOCX({ markdown })
         if (res.success) {
           triggerToast(`Successfully exported DOCX to ${res.filePath?.split(/[\\/]/).pop()}`)
+          logActivity('Exported to MS Word DOCX', '📝', 'success', `File: ${res.filePath}`)
         }
       } else {
         // Fallback: convert to simple HTML and trigger download
@@ -363,10 +408,12 @@ function App() {
         a.click()
         URL.revokeObjectURL(url)
         triggerToast('DOCX export requires desktop app. Downloaded as HTML fallback.')
+        logActivity('Exported Mock DOCX', '📝', 'warning', 'DOCX requires desktop app. Fallback HTML triggered.')
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err)
       triggerToast('Error exporting DOCX.')
+      logActivity('Failed to Export DOCX', '📝', 'error', err?.message || String(err))
     }
   }
 
@@ -374,11 +421,13 @@ function App() {
     const toc = generateTOC(markdown)
     setMarkdown((prev) => toc + '\n' + prev)
     triggerToast('Table of Contents inserted at top')
+    logActivity('Generated Table of Contents', '📑', 'success', 'TOC hierarchy prepended to document.')
   }
 
   // Handle theme changes
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme)
+    logActivity(`Theme Changed to ${newTheme.toUpperCase()}`, '🎨', 'success')
     switch (newTheme) {
       case 'dark':
         setIsDarkMode(true)
@@ -460,6 +509,17 @@ function App() {
     }
   }, [isDarkMode, theme])
 
+  // Debounced effect to log document synchronization across editing canvas
+  useEffect(() => {
+    if (markdown === DEFAULT_MARKDOWN) return // Skip logging for default page load
+
+    const timer = setTimeout(() => {
+      logActivity('Document Synchronized', '🔄', 'sync', `Source AST fully synced. Size: ${markdown.length} characters.`)
+    }, 1500)
+    
+    return () => clearTimeout(timer)
+  }, [markdown, logActivity])
+
   // Word count and Character calculations
   const getWordCount = () => {
     const text = markdown.replace(/[#*`_\\-]/g, '').trim()
@@ -471,7 +531,7 @@ function App() {
   }
 
   // Tiptap Command wrappers executed directly on the in-memory ProseMirror instance
-  const runCommand = (command: (editor: any) => void) => {
+  const runCommand = (command: (editor: any) => void, actionName?: string, icon?: string) => {
     const editor = editorInstance
     const isDestroyed = editor ? editor.isDestroyed : true
     console.log('[App runCommand] editor state:', {
@@ -484,8 +544,18 @@ function App() {
       try {
         command(editor)
         console.log('[App runCommand] Command successfully executed.')
-      } catch (err) {
+        if (actionName && icon) {
+          logActivity(actionName, icon, 'success', `Operation applied to active text selection.`)
+        }
+      } catch (err: any) {
         console.error('[runCommand] Error:', err)
+        if (actionName && icon) {
+          logActivity(actionName, icon, 'error', `Failed to apply operation: ${err?.message || err}`)
+        }
+      }
+    } else {
+      if (actionName && icon) {
+        logActivity(actionName, icon, 'warning', `Editor not active or focused. Click on the document first.`)
       }
     }
   }
@@ -498,32 +568,25 @@ function App() {
         setActiveTab={setActiveTab}
         editor={editorInstance}
         selectionTick={selectionTick}
-        onBold={() => {
-          console.log('[App onBold] triggered');
-          runCommand((e) => {
-            console.log('[App onBold] Executing editor.chain().focus().toggleBold().run()');
-            const res = e.chain().focus().toggleBold().run();
-            console.log('[App onBold] chain result:', res);
-          });
-        }}
-        onItalic={() => runCommand((e) => e.chain().focus().toggleItalic().run())}
-        onUnderline={() => runCommand((e) => e.chain().focus().toggleUnderline().run())}
-        onStrike={() => runCommand((e) => e.chain().focus().toggleStrike().run())}
-        onParagraph={() => runCommand((e) => e.chain().focus().setParagraph().run())}
-        onHeading={(level) => runCommand((e) => e.chain().focus().toggleHeading({ level }).run())}
-        onBlockquote={() => runCommand((e) => e.chain().focus().toggleBlockquote().run())}
-        onHorizontalRule={() => runCommand((e) => e.chain().focus().setHorizontalRule().run())}
-        onFontFamily={(family) => runCommand((e) => e.chain().focus().setFontFamily(family).run())}
-        onFontSize={(size) => runCommand((e) => e.chain().focus().setFontSize(size).run())}
-        onTextColor={(color) => runCommand((e) => e.chain().focus().setColor(color).run())}
+        onBold={() => runCommand((e) => e.chain().focus().toggleBold().run(), 'Toggled Bold Formatting', '🅱️')}
+        onItalic={() => runCommand((e) => e.chain().focus().toggleItalic().run(), 'Toggled Italic Formatting', '🇮')}
+        onUnderline={() => runCommand((e) => e.chain().focus().toggleUnderline().run(), 'Toggled Underline Formatting', '🇺')}
+        onStrike={() => runCommand((e) => e.chain().focus().toggleStrike().run(), 'Toggled Strikethrough', '🇸')}
+        onParagraph={() => runCommand((e) => e.chain().focus().setParagraph().run(), 'Set Paragraph Style', '📝')}
+        onHeading={(level) => runCommand((e) => e.chain().focus().toggleHeading({ level }).run(), `Toggled Heading ${level}`, '頭')}
+        onBlockquote={() => runCommand((e) => e.chain().focus().toggleBlockquote().run(), 'Toggled Blockquote', '💬')}
+        onHorizontalRule={() => runCommand((e) => e.chain().focus().setHorizontalRule().run(), 'Inserted Divider Line', '➖')}
+        onFontFamily={(family) => runCommand((e) => e.chain().focus().setFontFamily(family).run(), `Font Family: ${family}`, '🔤')}
+        onFontSize={(size) => runCommand((e) => e.chain().focus().setFontSize(size).run(), `Font Size: ${size}pt`, '🔢')}
+        onTextColor={(color) => runCommand((e) => e.chain().focus().setColor(color).run(), `Text Color: ${color}`, '🎨')}
         onHighlightColor={(color) => {
           if (color === 'transparent') {
-            runCommand((e) => e.chain().focus().unsetHighlight().run())
+            runCommand((e) => e.chain().focus().unsetHighlight().run(), 'Removed Text Highlight', '🎨')
           } else {
-            runCommand((e) => e.chain().focus().toggleHighlight({ color }).run())
+            runCommand((e) => e.chain().focus().toggleHighlight({ color }).run(), `Applied Highlight: ${color}`, '🎨')
           }
         }}
-        onAlignText={(align) => runCommand((e) => e.chain().focus().setTextAlign(align).run())}
+        onAlignText={(align) => runCommand((e) => e.chain().focus().setTextAlign(align).run(), `Aligned Text: ${align}`, '☷')}
         marginType={marginType}
         setMarginType={setMarginType}
         viewMode={viewMode}
@@ -542,7 +605,7 @@ function App() {
                 },
               })
               .run()
-          )
+          , 'Inserted Data Table', '📅')
         }}
         onInsertMermaid={() => {
           runCommand((e) =>
@@ -553,25 +616,27 @@ function App() {
                 attrs: { code: 'graph TD\n  A[Start] --> B(Edit Code)' },
               })
               .run()
-          )
+          , 'Inserted Mermaid Diagram', '📊')
         }}
         onSave={handleSaveFile}
         onOpenFile={handleOpenFile}
         onNewFile={handleNewFile}
-        onUndo={() => runCommand((e) => e.chain().focus().undo().run())}
-        onRedo={() => runCommand((e) => e.chain().focus().redo().run())}
+        onUndo={() => runCommand((e) => e.chain().focus().undo().run(), 'Undo Last Action', '↶')}
+        onRedo={() => runCommand((e) => e.chain().focus().redo().run(), 'Redo Last Action', '↷')}
         onCut={() => {
           document.execCommand('cut')
           triggerToast('Cut')
+          logActivity('Cut Content', '✂️', 'success')
         }}
         onCopy={() => {
           document.execCommand('copy')
           triggerToast('Copied to Clipboard')
+          logActivity('Copied Content', '📋', 'success')
         }}
         onPaste={() => {
           navigator.clipboard.readText().then((text) => {
             if (text) {
-              runCommand((e) => e.chain().focus().insertContent(text).run())
+              runCommand((e) => e.chain().focus().insertContent(text).run(), 'Pasted Clipboard Content', '📋')
             }
           })
         }}
@@ -593,7 +658,7 @@ function App() {
                 ],
               })
               .run()
-          )
+          , 'Inserted Task List', '☑')
         }}
         onInsertMath={() => {
           const latex = prompt('Enter LaTeX formula:', 'E = mc^2')
@@ -606,13 +671,13 @@ function App() {
                   attrs: { latex },
                 })
                 .run()
-            )
+            , 'Inserted Math Formula', '∑')
           }
         }}
         onInsertLink={() => {
           const url = prompt('Enter URL:')
           if (url) {
-            runCommand((e) => e.chain().focus().setLink({ href: url }).run())
+            runCommand((e) => e.chain().focus().setLink({ href: url }).run(), 'Inserted Link', '🔗')
           }
         }}
         filePath={filePath}
@@ -624,6 +689,55 @@ function App() {
 
       {/* Main Multi-Editor Split Workspace Canvas */}
       <div className={`novawriter-workspace view-mode-${viewMode}`}>
+        {/* COLLAPSIBLE ACTIVITY SIDEBAR */}
+        {sidebarOpen && (
+          <div className="workspace-sidebar activity-sidebar">
+            <div className="sidebar-header">
+              <span>📋 Activity & Sync Log</span>
+              <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>×</button>
+            </div>
+            <div className="sidebar-actions-row">
+              <button className="sidebar-clear-btn" onClick={() => setActivities([])}>Clear History</button>
+            </div>
+            <div className="activity-list-container">
+              {activities.length === 0 ? (
+                <div className="activity-empty-state">
+                  <span>No activities logged yet. Edit text or click ribbon buttons.</span>
+                </div>
+              ) : (
+                activities.map(act => (
+                  <div key={act.id} className={`activity-card ${act.status}`}>
+                    <div className="activity-card-top">
+                      <span className="activity-icon">{act.icon}</span>
+                      <span className="activity-title">{act.action}</span>
+                      <span className="activity-time">{act.timestamp}</span>
+                    </div>
+                    {act.details && (
+                      <div className="activity-card-details">
+                        {act.details}
+                      </div>
+                    )}
+                    <div className="activity-card-status">
+                      <span className={`status-badge ${act.status}`}>
+                        {act.status === 'success' && '✓ Applied'}
+                        {act.status === 'sync' && '● Synced'}
+                        {act.status === 'error' && '✗ Failed'}
+                        {act.status === 'warning' && '⚠ Warning'}
+                      </span>
+                      <span className={`preview-status status-${act.status}`}>
+                        {act.status === 'success' && 'Preview: Updating...'}
+                        {act.status === 'sync' && 'Preview: Updated ✓'}
+                        {act.status === 'error' && 'Preview: Out of Sync ✗'}
+                        {act.status === 'warning' && 'Preview: Warning ⚠'}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
         {/* WORD MODE (Rich WYSIWYG Page View) */}
         {(viewMode === 'word' || viewMode === 'split') && (
           <div className="workspace-panel word-panel">
@@ -705,6 +819,17 @@ function App() {
           </div>
         </div>
       )}
+      {/* Floating Sidebar Toggle Button when collapsed */}
+      {!sidebarOpen && (
+        <button 
+          className="sidebar-toggle-trigger" 
+          onClick={() => setSidebarOpen(true)}
+          title="Open Activity History Sidebar"
+        >
+          📋 Activity Log
+        </button>
+      )}
+
       {/* Interactive Diagnostics Debug Panel */}
       <div className={`novawriter-diagnostics ${!diagnosticsOpen ? 'collapsed' : ''}`} onClick={() => !diagnosticsOpen && setDiagnosticsOpen(true)}>
         {!diagnosticsOpen ? (

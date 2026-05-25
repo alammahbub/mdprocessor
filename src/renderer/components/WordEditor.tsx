@@ -254,6 +254,16 @@ export const WordEditor: React.FC<WordEditorProps> = ({
     },
   })
 
+  // Sync the active editor instance to the parent component on mount, update, and unmount.
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) {
+      onEditorReady?.(editor)
+    }
+    return () => {
+      onEditorReady?.(null)
+    }
+  }, [editor, onEditorReady])
+
   // Sync from external source (CodeMirror markdown editor) into ProseMirror.
   // Skip when the change originated from this editor's own onUpdate.
   useEffect(() => {
