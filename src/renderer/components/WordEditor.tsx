@@ -259,9 +259,6 @@ export const WordEditor: React.FC<WordEditorProps> = ({
     if (editor && !editor.isDestroyed) {
       onEditorReady?.(editor)
     }
-    return () => {
-      onEditorReady?.(null)
-    }
   }, [editor, onEditorReady])
 
   // Sync from external source (CodeMirror markdown editor) into ProseMirror.
