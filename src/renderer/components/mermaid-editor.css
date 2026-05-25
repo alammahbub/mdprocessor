@@ -7,8 +7,9 @@
 }
 
 .mermaid-rendered-container {
-  width: 100%;
-  max-width: 600px;
+  position: relative;
+  overflow: visible;
+  max-width: 100%;
   background: rgba(255, 255, 255, 0.6);
   border: 1px dashed rgba(0, 0, 0, 0.15);
   border-radius: 8px;
@@ -17,7 +18,21 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mermaid-rendered-container.selected {
+  border: 1px solid #2b579a;
+  box-shadow: 0 0 0 2px rgba(43, 87, 154, 0.4);
+}
+
+.dark-mode .mermaid-rendered-container.selected {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.4);
+}
+
+.mermaid-rendered-container.resizing {
+  user-select: none;
 }
 
 .dark-mode .mermaid-rendered-container {

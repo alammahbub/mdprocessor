@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { NodeViewWrapper } from '@tiptap/react'
 import type { NodeViewProps } from '@tiptap/react'
 import { Node, mergeAttributes } from '@tiptap/core'
@@ -13,12 +13,30 @@ mermaid.initialize({
   securityLevel: 'loose',
 })
 
-export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes }) => {
+export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected }) => {
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string>('')
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [tempCode, setTempCode] = useState<string>(node.attrs.code)
+  const [width, setWidth] = useState<number>(node.attrs.width || 600)
+  const [isResizing, setIsResizing] = useState<boolean>(false)
   const renderIdRef = useRef<string>(`mermaid-${Math.floor(Math.random() * 1000000)}`)
+
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(0)
+  const widthRef = useRef(width)
+
+  // Keep widthRef in sync with state
+  useEffect(() => {
+    widthRef.current = width
+  }, [width])
+
+  // Sync width state from node attributes
+  useEffect(() => {
+    if (node.attrs.width) {
+      setWidth(node.attrs.width)
+    }
+  }, [node.attrs.width])
 
   const compileDiagram = async (code: string) => {
     try {
@@ -57,12 +75,46 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
     setIsEditing(false)
   }
 
+  const handleResizeMouseDown = useCallback((e: React.MouseEvent, corner: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizing(true)
+    startXRef.current = e.clientX
+    startWidthRef.current = widthRef.current
+
+    const handleMouseMove = (ev: MouseEvent) => {
+      const dx = ev.clientX - startXRef.current
+      let newWidth: number
+
+      if (corner === 'se') {
+        newWidth = Math.max(200, startWidthRef.current + dx)
+      } else if (corner === 'sw') {
+        newWidth = Math.max(200, startWidthRef.current - dx)
+      } else {
+        newWidth = Math.max(200, startWidthRef.current + dx)
+      }
+
+      setWidth(newWidth)
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+      updateAttributes({ width: Math.round(widthRef.current) })
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+  }, [updateAttributes])
+
   return (
-    <NodeViewWrapper className="mermaid-wrapper">
+    <NodeViewWrapper className="mermaid-wrapper" contentEditable={false}>
       <div 
-        className={`mermaid-rendered-container ${isEditing ? 'blurred' : ''}`}
-        onClick={() => setIsEditing(true)}
-        title="Click to edit diagram"
+        className={`mermaid-rendered-container ${isEditing ? 'blurred' : ''} ${selected ? 'selected' : ''} ${isResizing ? 'resizing' : ''}`}
+        style={{ width: `${width}px`, maxWidth: '100%' }}
+        onClick={() => !isResizing && setIsEditing(true)}
+        title="Click to edit diagram, drag handles to resize"
       >
         {svg ? (
           <div className="mermaid-svg-frame" dangerouslySetInnerHTML={{ __html: svg }} />
@@ -70,6 +122,14 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
           <div className="mermaid-placeholder">
             <span>📊 [Click to Create Mermaid Diagram]</span>
           </div>
+        )}
+
+        {/* Resizing handles when selected */}
+        {selected && (
+          <>
+            <div className="resize-handle resize-handle-se" onMouseDown={(e) => handleResizeMouseDown(e, 'se')} />
+            <div className="resize-handle resize-handle-sw" onMouseDown={(e) => handleResizeMouseDown(e, 'sw')} />
+          </>
         )}
       </div>
 
@@ -115,7 +175,10 @@ export const MermaidExtension = Node.create({
   addAttributes() {
     return {
       code: {
-        default: 'graph TD\n  A[Start] --> B(End)',
+        default: 'graph TD\n  A[Start] --> B(End]',
+      },
+      width: {
+        default: 600,
       },
     }
   },
@@ -127,21 +190,29 @@ export const MermaidExtension = Node.create({
         getAttrs: (dom) => {
           if (typeof dom === 'string') return {}
           const element = dom as HTMLElement
-          return { code: element.getAttribute('data-code') || '' }
+          return { 
+            code: element.getAttribute('data-code') || '',
+            width: parseInt(element.getAttribute('data-width') || '600') || 600,
+          }
         }
       },
     ]
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'mermaid', 'data-code': HTMLAttributes.code }), 0]
+    return ['div', mergeAttributes(HTMLAttributes, { 
+      'data-type': 'mermaid', 
+      'data-code': HTMLAttributes.code,
+      'data-width': String(HTMLAttributes.width || 600),
+    }), 0]
   },
 
   // Serialize the mermaid node back to its HTML div form when saving as markdown
   renderMarkdown: (node: any) => {
     const code = node.attrs?.code || ''
     const escaped = code.replace(/"/g, '&quot;')
-    return `<div data-type="mermaid" data-code="${escaped}"></div>\n`
+    const width = node.attrs?.width || 600
+    return `<div data-type="mermaid" data-code="${escaped}" data-width="${width}"></div>\n`
   },
 
   addNodeView() {
