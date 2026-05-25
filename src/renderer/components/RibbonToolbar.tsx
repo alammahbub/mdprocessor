@@ -331,7 +331,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
               </div>
 
               <div className="ribbon-group-row">
-                <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onBold(); }} title="Bold (Ctrl+B)">B</button>
+                <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onMouseDown={(e) => { console.log('[RibbonToolbar] Bold onMouseDown'); e.preventDefault(); onBold(); }} title="Bold (Ctrl+B)">B</button>
                 <button className={`ribbon-tool-btn font-italic ${isItalic ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onItalic(); }} title="Italic (Ctrl+I)">I</button>
                 <button className={`ribbon-tool-btn font-underline ${isUnderline ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onUnderline(); }} title="Underline (Ctrl+U)">U</button>
                 <button className={`ribbon-tool-btn font-strike ${isStrike ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onStrike(); }} title="Strikethrough">S</button>

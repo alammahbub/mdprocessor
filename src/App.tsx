@@ -196,10 +196,41 @@ function App() {
   // Editor instance state from WordEditor
   const [editorInstance, setEditorInstance] = useState<any>(null)
 
+  // Interactive diagnostics states and console redirect hook
+  const [diagnosticsOpen, setDiagnosticsOpen] = useState(false)
+  const [diagLogs, setDiagLogs] = useState<string[]>([])
+
+  useEffect(() => {
+    const originalLog = console.log
+    const originalError = console.error
+    
+    console.log = (...args) => {
+      originalLog(...args)
+      const msg = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ')
+      setDiagLogs(prev => [...prev.slice(-99), `[LOG] ${msg}`])
+    }
+    
+    console.error = (...args) => {
+      originalError(...args)
+      const msg = args.map(arg => typeof arg === 'object' ? JSON.stringify(arg) : String(arg)).join(' ')
+      setDiagLogs(prev => [...prev.slice(-99), `[ERR] ${msg}`])
+    }
+    
+    return () => {
+      console.log = originalLog
+      console.error = originalError
+    }
+  }, [])
+
   // Show status popup toast
   const triggerToast = useCallback((msg: string) => {
     setToastMessage(msg)
     setTimeout(() => setToastMessage(''), 3000)
+  }, [])
+
+  // Stable callback for editor ready
+  const handleEditorReady = useCallback((editor: any) => {
+    setEditorInstance(editor)
   }, [])
 
   // Load recent files on mount
@@ -442,9 +473,17 @@ function App() {
   // Tiptap Command wrappers executed directly on the in-memory ProseMirror instance
   const runCommand = (command: (editor: any) => void) => {
     const editor = editorInstance
-    if (editor && !editor.isDestroyed && editor.commands) {
+    const isDestroyed = editor ? editor.isDestroyed : true
+    console.log('[App runCommand] editor state:', {
+      hasEditor: !!editor,
+      isDestroyed: isDestroyed,
+      hasCommands: editor && !isDestroyed ? !!editor.commands : false,
+      selection: editor && !isDestroyed && editor.state ? { from: editor.state.selection.from, to: editor.state.selection.to } : null
+    })
+    if (editor && !isDestroyed && editor.commands) {
       try {
         command(editor)
+        console.log('[App runCommand] Command successfully executed.')
       } catch (err) {
         console.error('[runCommand] Error:', err)
       }
@@ -459,7 +498,14 @@ function App() {
         setActiveTab={setActiveTab}
         editor={editorInstance}
         selectionTick={selectionTick}
-        onBold={() => runCommand((e) => e.chain().focus().toggleBold().run())}
+        onBold={() => {
+          console.log('[App onBold] triggered');
+          runCommand((e) => {
+            console.log('[App onBold] Executing editor.chain().focus().toggleBold().run()');
+            const res = e.chain().focus().toggleBold().run();
+            console.log('[App onBold] chain result:', res);
+          });
+        }}
         onItalic={() => runCommand((e) => e.chain().focus().toggleItalic().run())}
         onUnderline={() => runCommand((e) => e.chain().focus().toggleUnderline().run())}
         onStrike={() => runCommand((e) => e.chain().focus().toggleStrike().run())}
@@ -586,9 +632,7 @@ function App() {
               onChange={setMarkdown}
               marginType={marginType}
               isFocused={true}
-              onEditorReady={(editor) => {
-                setEditorInstance(editor)
-              }}
+              onEditorReady={handleEditorReady}
               onSelectionChange={triggerSelectionTick}
             />
           </div>
@@ -661,6 +705,52 @@ function App() {
           </div>
         </div>
       )}
+      {/* Interactive Diagnostics Debug Panel */}
+      <div className={`novawriter-diagnostics ${!diagnosticsOpen ? 'collapsed' : ''}`} onClick={() => !diagnosticsOpen && setDiagnosticsOpen(true)}>
+        {!diagnosticsOpen ? (
+          <span>🛠️ Diagnostics</span>
+        ) : (
+          <div className="novawriter-diagnostics-expanded">
+            <div className="diagnostics-header" onClick={(e) => { e.stopPropagation(); setDiagnosticsOpen(false); }}>
+              <span>🛠️ NovaWriter Diagnostics</span>
+              <button onClick={(e) => { e.stopPropagation(); setDiagLogs([]); }} style={{ marginLeft: '12px' }}>Clear Logs</button>
+            </div>
+            <div className="diagnostics-content">
+              <div className="diagnostics-state-grid">
+                <span className="diagnostics-state-label">View Mode:</span>
+                <span className="diagnostics-state-value">{viewMode}</span>
+
+                <span className="diagnostics-state-label">Has Editor:</span>
+                <span className="diagnostics-state-value">{editorInstance ? 'Yes' : 'No'}</span>
+
+                <span className="diagnostics-state-label">Editor Focused:</span>
+                <span className="diagnostics-state-value">{editorInstance?.view?.focused ? 'Yes' : 'No'}</span>
+
+                <span className="diagnostics-state-label">Selection:</span>
+                <span className="diagnostics-state-value">
+                  {editorInstance ? `${editorInstance.state.selection.from} to ${editorInstance.state.selection.to}` : 'None'}
+                </span>
+                
+                <span className="diagnostics-state-label">Selected Text:</span>
+                <span className="diagnostics-state-value">
+                  {editorInstance && editorInstance.state ? `"${editorInstance.state.doc.textBetween(editorInstance.state.selection.from, editorInstance.state.selection.to)}"` : 'None'}
+                </span>
+              </div>
+              <div className="diagnostics-logs">
+                {diagLogs.length === 0 ? (
+                  <span style={{ color: '#605e5c', fontStyle: 'italic' }}>No log messages yet. Click buttons to trace.</span>
+                ) : (
+                  diagLogs.map((log, idx) => (
+                    <div key={idx} className={`diagnostics-log-line ${log.startsWith('[ERR]') ? 'error' : ''}`}>
+                      {log}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

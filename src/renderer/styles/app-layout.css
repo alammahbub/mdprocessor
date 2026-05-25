@@ -246,3 +246,121 @@ body.solarized-mode .markdown-settings-row {
   background-color: var(--canvas-bg, #f3f2f1);
 }
 
+/* ==========================================================================
+   Interactive Diagnostics Debug Panel
+   ========================================================================== */
+.novawriter-diagnostics {
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  z-index: 10000;
+  font-family: monospace;
+  font-size: 11px;
+  background: rgba(30, 30, 30, 0.85);
+  backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #c5c6c7;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.novawriter-diagnostics.collapsed {
+  width: 130px;
+  height: 32px;
+  cursor: pointer;
+  background: rgba(43, 87, 154, 0.9);
+  border-color: rgba(43, 87, 154, 0.5);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+}
+
+.novawriter-diagnostics.collapsed:hover {
+  background: rgba(43, 87, 154, 1);
+  transform: translateY(-2px);
+}
+
+.novawriter-diagnostics-expanded {
+  width: 450px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.diagnostics-header {
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+
+.diagnostics-header span {
+  font-weight: bold;
+}
+
+.diagnostics-header button {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.diagnostics-content {
+  padding: 12px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.diagnostics-state-grid {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.diagnostics-state-label {
+  color: #89b4fa;
+}
+
+.diagnostics-state-value {
+  color: #a6e3a1;
+  word-break: break-all;
+}
+
+.diagnostics-logs {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  padding: 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.diagnostics-log-line {
+  white-space: pre-wrap;
+  word-break: break-all;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  padding-bottom: 2px;
+}
+
+.diagnostics-log-line.error {
+  color: #ff6b6b;
+}
+
+.diagnostics-log-line.success {
+  color: #a6e3a1;
+}
+
+
