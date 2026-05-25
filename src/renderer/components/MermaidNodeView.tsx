@@ -86,8 +86,8 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
 
   const updateMermaidNodeText = (code: string, nodeId: string, newText: string): string => {
     const escapeRegExp = (str: string) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
-    // Match nodeId followed by brackets/braces/quotes containing the old text.
-    const regex = new RegExp(`^(\\s*${escapeRegExp(nodeId)})\\s*([\\[\\(\\{>]+(?:\\\\|/)?(?:")?)(.*?)(?:")?(?:\\\\|/)?([\\]\\)\\}]+)`, 'gm')
+    // Match nodeId (using word boundaries) followed by brackets/braces/quotes containing the old text.
+    const regex = new RegExp(`\\b(${escapeRegExp(nodeId)})\\s*([\\[\\(\\{>]+(?:\\\\|/)?(?:")?)(.*?)(?:")?(?:\\\\|/)?([\\]\\)\\}]+)`, 'g')
     
     return code.replace(regex, (_match, prefix, openBrackets, _label, closeBrackets) => {
       return `${prefix}${openBrackets}${newText}${closeBrackets}`
