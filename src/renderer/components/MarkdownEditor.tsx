@@ -112,12 +112,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   return (
     <div 
       ref={containerRef} 
-      style={{ 
-        width: '100%', 
-        height: '100%', 
-        borderLeft: '1px solid #2d3139',
-        overflow: 'hidden'
-      }} 
+      className="novawriter-markdown-editor-container"
     />
   )
 }

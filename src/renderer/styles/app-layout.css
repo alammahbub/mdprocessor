@@ -157,3 +157,92 @@ body.solarized-mode .markdown-settings-row {
     transform: translate(-50%, 0);
   }
 }
+
+/* ==========================================================================
+   Workspace Layout & Centered Focused Views (Word Only & Code Only)
+   ========================================================================== */
+
+/* Universal Workspace Panels Layout */
+.workspace-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Default Markdown Editor Container */
+.novawriter-markdown-editor-container {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-left: 1px solid #2d3139;
+}
+
+/* ==========================================
+   Code Only Mode Centered Content Layout
+   ========================================== */
+
+/* Centered container in Code Only Mode */
+.view-mode-markdown .markdown-panel {
+  background-color: var(--canvas-bg, #f3f2f1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+  padding: 40px 20px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+/* Centered Header / Settings Panel */
+.view-mode-markdown .markdown-settings-row {
+  width: 210mm;
+  max-width: 100%;
+  border-radius: 6px 6px 0 0;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  flex-shrink: 0;
+  border-left: 1px solid #2d3139;
+  border-right: 1px solid #2d3139;
+}
+
+/* Centered A4-width Code Sheet */
+.view-mode-markdown .novawriter-markdown-editor-container {
+  width: 210mm;
+  max-width: 100%;
+  flex: 1; /* Occupy remaining height with vertical stretch */
+  margin-bottom: 40px; /* Elegant buffer padding at the bottom */
+  border-radius: 0 0 6px 6px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  background-color: #1e1e1e; /* Keep IDE dark mode background */
+  border: 1px solid #2d3139;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure CodeMirror editor internal elements stretch and fit the card */
+.view-mode-markdown .novawriter-markdown-editor-container .cm-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.view-mode-markdown .novawriter-markdown-editor-container .cm-scroller {
+  flex: 1;
+}
+
+/* ==========================================
+   WYSIWYG Only Mode Centered Content Layout
+   ========================================== */
+
+/* WYSIWYG Only Mode container fills workspace and centers the page scroller */
+.view-mode-word .word-panel {
+  width: 100%;
+  height: 100%;
+  background-color: var(--canvas-bg, #f3f2f1);
+}
+

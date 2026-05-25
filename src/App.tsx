@@ -577,7 +577,7 @@ function App() {
       />
 
       {/* Main Multi-Editor Split Workspace Canvas */}
-      <div className="novawriter-workspace">
+      <div className={`novawriter-workspace view-mode-${viewMode}`}>
         {/* WORD MODE (Rich WYSIWYG Page View) */}
         {(viewMode === 'word' || viewMode === 'split') && (
           <div className="workspace-panel word-panel">
