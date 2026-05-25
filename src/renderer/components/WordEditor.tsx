@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { Markdown } from '@tiptap/markdown'
@@ -11,8 +11,16 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import Paragraph from '@tiptap/extension-paragraph'
 import Heading from '@tiptap/extension-heading'
 import { Extension } from '@tiptap/core'
+import TaskList from '@tiptap/extension-task-list'
+import TaskItem from '@tiptap/extension-task-item'
+import LinkExtension from '@tiptap/extension-link'
+import DOMPurify from 'dompurify'
+import Typography from '@tiptap/extension-typography'
 import { MermaidExtension } from './MermaidNodeView'
+import { ImageExtension } from './ImageNodeView'
+import { MathInlineExtension, MathBlockExtension } from './MathExtensions'
 import '../styles/a4-emulator.css'
+import '../styles/image-resizer.css'
 
 // Custom Tiptap extension to manage font size (renders as inline styles in standard span tags)
 export const FontSize = Extension.create({
@@ -101,6 +109,7 @@ export const CustomParagraph = Paragraph.extend({
 } as any)
 
 // Custom Heading extension to preserve alignments as aligned heading tags
+// Also generates heading IDs for anchor links
 export const CustomHeading = Heading.extend({
   renderMarkdown: (node: any, helpers: any) => {
     const content = helpers.renderChildren(node.content || [])
@@ -111,7 +120,23 @@ export const CustomHeading = Heading.extend({
     }
     const hashes = '#'.repeat(level)
     return `${hashes} ${content}\n\n`
-  }
+  },
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      id: {
+        default: null,
+        parseHTML: (element: HTMLElement) => {
+          return element.getAttribute('id') || 
+            element.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || null
+        },
+        renderHTML: (attributes: Record<string, any>) => {
+          if (!attributes.id) return {}
+          return { id: attributes.id }
+        },
+      },
+    }
+  },
 } as any)
 
 // Markdown utilities to normalize formatting differences (CRLF vs LF) and prevent cursor reset loops
@@ -135,11 +160,14 @@ export const WordEditor: React.FC<WordEditorProps> = ({
   onEditorReady,
   onSelectionChange,
 }) => {
+  // Track whether the latest value change came from this editor's own onUpdate.
+  const isLocalUpdateRef = useRef(false)
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
-        paragraph: false, // Disable default so we can register our custom alignment-preserving paragraph
-        heading: false,   // Disable default so we can register our custom alignment-preserving heading
+        paragraph: false,
+        heading: false,
         codeBlock: {
           HTMLAttributes: {
             class: 'novawriter-code-block',
@@ -156,11 +184,27 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       }),
       FontFamily,
       TextAlign.configure({
-        types: ['heading', 'paragraph'],
+        types: ['heading', 'paragraph', 'tableCell', 'tableHeader', 'listItem'],
       }),
+      TaskList,
+      TaskItem.configure({
+        nested: true,
+      }),
+      LinkExtension.configure({
+        openOnClick: false,
+        autolink: true,
+        linkOnPaste: true,
+        HTMLAttributes: {
+          class: 'novawriter-link',
+        },
+      }),
+      Typography,
       FontSize,
       Markdown,
+      MathInlineExtension,
+      MathBlockExtension,
       MermaidExtension,
+      ImageExtension,
     ],
     content: value,
     contentType: 'markdown' as any,
@@ -170,9 +214,13 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       }
     },
     onUpdate: ({ editor }) => {
-      // Get standard Markdown string output directly
-      const markdownOutput = (editor as any).getMarkdown()
-      onChange(markdownOutput)
+      try {
+        const markdownOutput = (editor as any).getMarkdown()
+        isLocalUpdateRef.current = true
+        onChange(markdownOutput)
+      } catch (err) {
+        console.error('[WordEditor] getMarkdown() error:', err)
+      }
     },
     onSelectionUpdate: () => {
       if (onSelectionChange) {
@@ -183,28 +231,50 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       attributes: {
         class: 'novawriter-page-content focus:outline-none',
       },
+      // Sanitize pasted HTML content using DOMPurify
+      transformPastedHTML: (html) => {
+        return DOMPurify.sanitize(html, {
+          ALLOWED_TAGS: [
+            'p', 'br', 'b', 'i', 'u', 's', 'em', 'strong', 'a', 'img',
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li',
+            'blockquote', 'pre', 'code', 'hr', 'table', 'thead', 'tbody',
+            'tr', 'th', 'td', 'col', 'colgroup', 'span', 'div', 'mark',
+            'sub', 'sup', 'dl', 'dt', 'dd', 'figure', 'figcaption',
+            'ins', 'span',
+          ],
+          ALLOWED_ATTR: [
+            'href', 'src', 'alt', 'width', 'height', 'style', 'class',
+            'id', 'title', 'target', 'rel', 'data-type', 'data-code',
+            'data-cols', 'data-rows', 'data-colwidths',
+            'data-math-inline', 'data-math-block',
+          ],
+          ALLOW_DATA_ATTR: true,
+        })
+      },
     },
   })
 
-  // Sync state changes from central markdown state
+  // Sync from external source (CodeMirror markdown editor) into ProseMirror.
+  // Skip when the change originated from this editor's own onUpdate.
   useEffect(() => {
     if (!editor) return
 
-    const currentMarkdown = (editor as any).getMarkdown()
-    const normValue = normalizeMarkdown(value)
-    const normCurrent = normalizeMarkdown(currentMarkdown)
-    
-    if (normValue !== normCurrent) {
-      console.log('[WordEditor Sync] Mismatch detected! Resetting editor content to sync with source of truth.', {
-        valueLength: value.length,
-        currentMarkdownLength: currentMarkdown.length,
-        normValue: normValue.slice(0, 100),
-        normCurrent: normCurrent.slice(0, 100)
-      })
-      // Correct Tiptap signature: setContent(content, options)
-      editor.commands.setContent(value, { emitUpdate: false } as any)
-    } else {
-      console.log('[WordEditor Sync] Content matches after normalization. No reset required.')
+    if (isLocalUpdateRef.current) {
+      isLocalUpdateRef.current = false
+      return
+    }
+
+    try {
+      const currentMarkdown = (editor as any).getMarkdown()
+      if (normalizeMarkdown(value) !== normalizeMarkdown(currentMarkdown)) {
+        if (!value || value.trim() === '') {
+          editor.commands.clearContent(false)
+          return
+        }
+        editor.commands.setContent(value, { emitUpdate: false, contentType: 'markdown' } as any)
+      }
+    } catch {
+      // Empty editor or serialization error — safe to ignore
     }
   }, [value, editor])
 

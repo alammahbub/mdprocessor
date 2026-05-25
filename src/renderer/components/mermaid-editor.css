@@ -45,7 +45,14 @@
   width: 100%;
   display: flex;
   justify-content: center;
+  pointer-events: none;
 }
+
+.mermaid-svg-frame svg {
+  pointer-events: none;
+}
+
+
 
 .mermaid-placeholder {
   color: #605e5c;

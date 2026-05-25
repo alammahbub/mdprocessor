@@ -81,7 +81,7 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
       )}
 
       {isEditing && (
-        <div className="mermaid-editor-overlay">
+        <div className="mermaid-editor-overlay" onMouseDown={(e) => e.stopPropagation()}>
           <div className="mermaid-editor-card">
             <div className="mermaid-editor-header">
               <span>Edit Mermaid Graph Code</span>
@@ -93,6 +93,7 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
               onChange={handleCodeChange}
               placeholder="e.g.&#10;graph TD&#10;  A[Start] --> B(End)"
               rows={6}
+              autoFocus
             />
             <div className="mermaid-editor-actions">
               <button className="editor-action-btn cancel" onClick={() => setIsEditing(false)}>Cancel</button>
@@ -134,6 +135,13 @@ export const MermaidExtension = Node.create({
 
   renderHTML({ HTMLAttributes }) {
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'mermaid', 'data-code': HTMLAttributes.code }), 0]
+  },
+
+  // Serialize the mermaid node back to its HTML div form when saving as markdown
+  renderMarkdown: (node: any) => {
+    const code = node.attrs?.code || ''
+    const escaped = code.replace(/"/g, '&quot;')
+    return `<div data-type="mermaid" data-code="${escaped}"></div>\n`
   },
 
   addNodeView() {

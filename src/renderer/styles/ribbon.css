@@ -1,6 +1,6 @@
 .ribbon-container {
-  background-color: #f3f2f1;
-  border-bottom: 1px solid #d2d0ce;
+  background-color: var(--ribbon-bg, #f3f2f1);
+  border-bottom: 1px solid var(--ribbon-border, #d2d0ce);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   user-select: none;
   display: flex;
@@ -10,9 +10,18 @@
   transition: background-color 0.25s, border-color 0.25s;
 }
 
-.dark-mode .ribbon-container {
-  background-color: #252526;
-  border-bottom: 1px solid #3c3c3c;
+/* Distraction-free mode hides ribbon */
+.ribbon-container.ribbon-distraction-free .ribbon-title-bar,
+.ribbon-container.ribbon-distraction-free .ribbon-tabs-nav,
+.ribbon-container.ribbon-distraction-free .ribbon-tab-panel {
+  display: none;
+}
+
+.ribbon-container.ribbon-distraction-free {
+  border-bottom: none;
+  box-shadow: none;
+  height: 0;
+  overflow: visible;
 }
 
 /* Title Bar */

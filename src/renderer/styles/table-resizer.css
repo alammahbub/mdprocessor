@@ -1,0 +1,89 @@
+/* Table NodeView with Column Resize Handles */
+.table-nodeview-wrapper {
+  margin: 16px 0;
+  position: relative;
+  overflow-x: auto;
+}
+
+.table-resize-container {
+  position: relative;
+  display: inline-block;
+  min-width: 100%;
+}
+
+.table-resize-container.selected {
+  outline: 2px solid #2b579a;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.dark-mode .table-resize-container.selected {
+  outline-color: #0078d4;
+}
+
+.novawriter-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+.novawriter-table td {
+  border: 1px solid #d2d0ce;
+  padding: 8px 10px;
+  min-width: 60px;
+  position: relative;
+  background-color: var(--page-bg, #ffffff);
+  color: var(--text-color, #323130);
+}
+
+.dark-mode .novawriter-table td {
+  border-color: #3c3c3c;
+}
+
+/* Column Resize Handles */
+.col-resize-handles-row {
+  position: absolute;
+  top: -6px;
+  left: 0;
+  right: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.col-resize-handle {
+  position: absolute;
+  top: -4px;
+  width: 6px;
+  height: 16px;
+  background-color: #2b579a;
+  border: 1px solid #ffffff;
+  border-radius: 3px;
+  cursor: col-resize;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  opacity: 0.7;
+}
+
+.dark-mode .col-resize-handle {
+  background-color: #0078d4;
+  border-color: #1e1e1e;
+}
+
+.col-resize-handle:hover,
+.col-resize-handle.active {
+  opacity: 1;
+  transform: translateX(-50%) scaleY(1.5);
+  box-shadow: 0 0 6px rgba(43, 87, 154, 0.4);
+}
+
+.dark-mode .col-resize-handle:hover,
+.dark-mode .col-resize-handle.active {
+  box-shadow: 0 0 6px rgba(0, 120, 212, 0.4);
+}
+
+.table-resize-container.resizing {
+  user-select: none;
+}

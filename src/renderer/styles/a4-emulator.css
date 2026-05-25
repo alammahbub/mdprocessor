@@ -4,6 +4,14 @@
   --text-color: #323130;
   --header-footer-color: #a19f9d;
   --primary-accent: #2b579a;
+  --code-bg: #1e1e1e;
+  --code-color: #d4d4d4;
+  --blockquote-color: #605e5c;
+  --ribbon-bg: #f3f2f1;
+  --ribbon-panel-bg: #ffffff;
+  --ribbon-border: #d2d0ce;
+  --status-bar-bg: #2b579a;
+  --hover-bg: rgba(0,0,0,0.04);
   
   /* Slate dark theme properties */
   --dark-canvas-bg: #1e1e1e;
@@ -11,6 +19,29 @@
   --dark-text-color: #e0e0e0;
   --dark-header-footer-color: #605e5c;
   --dark-primary-accent: #0078d4;
+  --dark-code-bg: #2d2d2d;
+  --dark-code-color: #d4d4d4;
+  --dark-blockquote-color: #cccccc;
+
+  /* Sepia theme properties */
+  --sepia-canvas-bg: #f4ecd8;
+  --sepia-page-bg: #faf4e8;
+  --sepia-text-color: #5b4636;
+  --sepia-header-footer-color: #8b7355;
+  --sepia-primary-accent: #704214;
+  --sepia-code-bg: #f0e6d0;
+  --sepia-code-color: #5b4636;
+  --sepia-blockquote-color: #8b7355;
+
+  /* Solarized theme properties */
+  --solarized-canvas-bg: #002b36;
+  --solarized-page-bg: #073642;
+  --solarized-text-color: #839496;
+  --solarized-header-footer-color: #657b83;
+  --solarized-primary-accent: #859900;
+  --solarized-code-bg: #001f27;
+  --solarized-code-color: #93a1a1;
+  --solarized-blockquote-color: #657b83;
 }
 
 body.dark-mode {
@@ -19,6 +50,46 @@ body.dark-mode {
   --text-color: var(--dark-text-color);
   --header-footer-color: var(--dark-header-footer-color);
   --primary-accent: var(--dark-primary-accent);
+  --code-bg: var(--dark-code-bg);
+  --code-color: var(--dark-code-color);
+  --blockquote-color: var(--dark-blockquote-color);
+  --ribbon-bg: #252526;
+  --ribbon-panel-bg: #1e1e1e;
+  --ribbon-border: #3c3c3c;
+  --status-bar-bg: #0078d4;
+  --hover-bg: rgba(255,255,255,0.05);
+}
+
+body.sepia-mode {
+  --canvas-bg: var(--sepia-canvas-bg);
+  --page-bg: var(--sepia-page-bg);
+  --text-color: var(--sepia-text-color);
+  --header-footer-color: var(--sepia-header-footer-color);
+  --primary-accent: var(--sepia-primary-accent);
+  --code-bg: var(--sepia-code-bg);
+  --code-color: var(--sepia-code-color);
+  --blockquote-color: var(--sepia-blockquote-color);
+  --ribbon-bg: #efe4c9;
+  --ribbon-panel-bg: #faf4e8;
+  --ribbon-border: #d4c5a9;
+  --status-bar-bg: #704214;
+  --hover-bg: rgba(0,0,0,0.04);
+}
+
+body.solarized-mode {
+  --canvas-bg: var(--solarized-canvas-bg);
+  --page-bg: var(--solarized-page-bg);
+  --text-color: var(--solarized-text-color);
+  --header-footer-color: var(--solarized-header-footer-color);
+  --primary-accent: var(--solarized-primary-accent);
+  --code-bg: var(--solarized-code-bg);
+  --code-color: var(--solarized-code-color);
+  --blockquote-color: var(--solarized-blockquote-color);
+  --ribbon-bg: #073642;
+  --ribbon-panel-bg: #002b36;
+  --ribbon-border: #094452;
+  --status-bar-bg: #859900;
+  --hover-bg: rgba(255,255,255,0.05);
 }
 
 .novawriter-canvas-scroller {
@@ -172,6 +243,335 @@ body.dark-mode {
   font-size: 9.5pt !important;
   overflow-x: auto !important;
   margin: 10px 0 !important;
+}
+
+/* Table styling for markdown and custom tables */
+.novawriter-page-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 11pt;
+  line-height: 1.4;
+  background-color: var(--page-bg, #ffffff);
+  color: var(--text-color, #323130);
+}
+
+.novawriter-page-content th,
+.novawriter-page-content td {
+  border: 1px solid #d2d0ce;
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.dark-mode .novawriter-page-content th,
+.dark-mode .novawriter-page-content td {
+  border-color: #3c3c3c;
+}
+
+.novawriter-page-content th {
+  font-weight: 600;
+  background-color: rgba(0, 0, 0, 0.04);
+  color: var(--text-color, #323130);
+}
+
+.dark-mode .novawriter-page-content th {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.sepia-mode .novawriter-page-content th {
+  background-color: rgba(139, 115, 85, 0.08);
+}
+
+.solarized-mode .novawriter-page-content th {
+  background-color: rgba(131, 148, 150, 0.08);
+}
+
+.sepia-mode .novawriter-page-content th,
+.sepia-mode .novawriter-page-content td {
+  border-color: #d4c5a9;
+}
+
+.solarized-mode .novawriter-page-content th,
+.solarized-mode .novawriter-page-content td {
+  border-color: #094452;
+}
+
+.novawriter-page-content tr:first-child th {
+  border-bottom-width: 2px;
+}
+
+.novawriter-page-content tr:nth-child(even) td {
+  background-color: rgba(0, 0, 0, 0.015);
+}
+
+.dark-mode .novawriter-page-content tr:nth-child(even) td,
+.solarized-mode .novawriter-page-content tr:nth-child(even) td {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Task List styling */
+.novawriter-page-content ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+
+.novawriter-page-content ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.novawriter-page-content ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+.novawriter-page-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary-accent, #2b579a);
+}
+
+.novawriter-page-content ul[data-type="taskList"] li[data-checked="true"] > div p {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+/* Link styling */
+.novawriter-link {
+  color: var(--primary-accent, #2b579a);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.novawriter-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* Definition list styling */
+.novawriter-page-content dl {
+  margin: 12px 0;
+  padding: 0;
+}
+
+.novawriter-page-content dt {
+  font-weight: 600;
+  margin-top: 8px;
+  color: var(--primary-accent, #2b579a);
+}
+
+.novawriter-page-content dd {
+  margin-left: 16px;
+  margin-bottom: 8px;
+  color: var(--text-color, #323130);
+}
+
+/* Highlight / Mark styling for ==text== */
+.novawriter-page-content mark {
+  background-color: #ffff00;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.dark-mode .novawriter-page-content mark {
+  background-color: #7a6200;
+  color: #e0e0e0;
+}
+
+.sepia-mode .novawriter-page-content mark {
+  background-color: #e8d5a3;
+}
+
+.solarized-mode .novawriter-page-content mark {
+  background-color: #657b00;
+  color: #e0e0e0;
+}
+
+/* Footnote styling */
+.novawriter-page-content sup[id^="fnref-"] a {
+  color: var(--primary-accent, #2b579a);
+  text-decoration: none;
+  font-size: 0.8em;
+}
+
+.novawriter-page-content li[id^="fn-"] {
+  font-size: 0.85em;
+  color: var(--header-footer-color, #a19f9d);
+}
+
+.novawriter-page-content li[id^="fn-"] a {
+  color: var(--primary-accent, #2b579a);
+}
+
+/* Math formula rendering (KaTeX) */
+.math-inline-render {
+  display: inline-block;
+  vertical-align: middle;
+  padding: 0 2px;
+}
+
+.math-inline-render.ProseMirror-selectednode {
+  outline: 2px solid var(--primary-accent, #2b579a);
+  border-radius: 3px;
+}
+
+.math-block-wrapper {
+  margin: 16px 0;
+}
+
+.math-block-render {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.02);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  transition: border-color 0.2s, background 0.2s;
+  min-height: 60px;
+}
+
+.math-block-render:hover {
+  border-color: var(--primary-accent, #2b579a);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.dark-mode .math-block-render {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.dark-mode .math-block-render:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sepia-mode .math-block-render {
+  background: rgba(139, 115, 85, 0.05);
+}
+
+.sepia-mode .math-block-render:hover {
+  background: rgba(139, 115, 85, 0.1);
+}
+
+.solarized-mode .math-block-render {
+  background: rgba(131, 148, 150, 0.05);
+}
+
+.solarized-mode .math-block-render:hover {
+  background: rgba(131, 148, 150, 0.1);
+}
+
+.math-block-error {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  font-size: 11px;
+  color: #a80000;
+}
+
+.math-block-editor {
+  padding: 12px;
+  background: var(--page-bg, #ffffff);
+  border: 2px solid var(--primary-accent, #2b579a);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+.math-block-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--header-footer-color, #a19f9d);
+  margin-bottom: 8px;
+}
+
+.math-block-textarea {
+  width: 100%;
+  min-height: 80px;
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 13px;
+  padding: 10px;
+  border: 1px solid var(--ribbon-border, #d2d0ce);
+  border-radius: 4px;
+  background: var(--code-bg, #1e1e1e);
+  color: var(--code-color, #d4d4d4);
+  resize: vertical;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.math-block-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.math-block-btn {
+  padding: 6px 16px;
+  background: var(--primary-accent, #2b579a);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.math-block-btn:hover {
+  opacity: 0.9;
+}
+
+.math-inline-input {
+  font-family: Consolas, monospace;
+  font-size: inherit;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--primary-accent, #2b579a);
+  border-radius: 3px;
+  padding: 0 4px;
+  outline: none;
+  color: inherit;
+}
+
+/* KaTeX overrides for themes */
+.katex {
+  font-size: 1.05em !important;
+}
+
+.math-block-render .katex-display {
+  margin: 0;
+}
+
+.dark-mode .katex .mathnormal,
+.dark-mode .katex .mord,
+.dark-mode .katex .mbin,
+.dark-mode .katex .mrel {
+  color: var(--dark-text-color, #e0e0e0);
+}
+
+.sepia-mode .katex .mathnormal,
+.sepia-mode .katex .mord,
+.sepia-mode .katex .mbin,
+.sepia-mode .katex .mrel {
+  color: var(--sepia-text-color, #5b4636);
+}
+
+.solarized-mode .katex .mathnormal,
+.solarized-mode .katex .mord,
+.solarized-mode .katex .mbin,
+.solarized-mode .katex .mrel {
+  color: var(--solarized-text-color, #839496);
+}
+
+/* <ins> tag styling */
+.novawriter-page-content ins {
+  text-decoration: none;
+  background-color: rgba(0, 128, 0, 0.08);
+  padding: 0 2px;
+  border-radius: 2px;
 }
 
 /* Custom horizontal line rule */

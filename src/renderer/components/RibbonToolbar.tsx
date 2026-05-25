@@ -31,7 +31,6 @@ const RibbonDropdown: React.FC<RibbonDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -53,7 +52,7 @@ const RibbonDropdown: React.FC<RibbonDropdownProps> = ({
         className={`ribbon-dropdown-trigger ${isOpen ? 'open' : ''} ${isColorPicker ? 'color-picker-trigger' : ''}`}
         style={triggerStyle}
         onMouseDown={(e) => {
-          e.preventDefault() // Crucial! Keeps editor selection active!
+          e.preventDefault()
           setIsOpen(!isOpen)
         }}
         title={title}
@@ -75,7 +74,7 @@ const RibbonDropdown: React.FC<RibbonDropdownProps> = ({
               className={`ribbon-dropdown-item ${opt.value === value ? 'selected' : ''}`}
               style={opt.style}
               onMouseDown={(e) => {
-                e.preventDefault() // Crucial! Keeps editor selection active!
+                e.preventDefault()
                 onChange(opt.value)
                 setIsOpen(false)
               }}
@@ -115,6 +114,9 @@ interface RibbonToolbarProps {
   setIsDarkMode: (dark: boolean) => void
   onInsertTable: () => void
   onInsertMermaid: () => void
+  onInsertTaskList?: () => void
+  onInsertLink?: () => void
+  onInsertMath?: () => void
   onSave: () => void
   onOpenFile: () => void
   onNewFile: () => void
@@ -124,7 +126,13 @@ interface RibbonToolbarProps {
   onCopy: () => void
   onPaste: () => void
   onExportPDF: () => void
+  onExportDOCX?: () => void
+  onInsertTOC?: () => void
   filePath: string | null
+  theme?: string
+  onThemeChange?: (theme: string) => void
+  distractionFree?: boolean
+  onDistractionFreeChange?: (val: boolean) => void
 }
 
 export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
@@ -161,11 +169,19 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
   onCopy,
   onPaste,
   onExportPDF,
+  onExportDOCX,
+  onInsertTOC,
+  onInsertTaskList,
+  onInsertLink,
+  onInsertMath,
   filePath,
+  theme = 'light',
+  onThemeChange,
+  distractionFree,
+  onDistractionFreeChange,
 }) => {
-  const tabs = ['Home', 'Insert', 'Layout', 'View']
+  const tabs = ['Home', 'Insert', 'Layout', 'References', 'View', 'Settings']
 
-  // Retrieve active attributes from the live Tiptap ProseMirror instance safely
   const activeEditor = (editor && !editor.isDestroyed) ? editor : null
 
   const isBold = activeEditor?.isActive('bold') || false
@@ -184,64 +200,69 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
   const isJustifyAlign = activeEditor?.isActive({ textAlign: 'justify' }) || false
 
   return (
-    <div className="ribbon-container">
-      {/* Top Application Title Bar */}
-      <div className="ribbon-title-bar">
-        <div className="ribbon-title-left">
-          <span className="app-logo">📄</span>
-          <span className="app-title">NovaWriter - {filePath ? filePath.split(/[\\/]/).pop() : 'Untitled.md'}</span>
-        </div>
-        <div className="ribbon-title-actions">
-          {/* File Operations */}
-          <button className="quick-action-btn" onClick={onNewFile} title="Create New Document (Ctrl+N)">📄 New</button>
-          <button className="quick-action-btn" onClick={onOpenFile} title="Open File (Ctrl+O)">📂 Open</button>
-          <button className="quick-action-btn primary" onClick={onSave} title="Save File (Ctrl+S)">💾 Save</button>
-          <button className="quick-action-btn" onClick={onExportPDF} title="Export to PDF">📥 Export PDF</button>
-          
-          <span className="ribbon-title-divider">|</span>
-          
-          {/* Quick Workspace View Toggles */}
-          <div className="quick-view-toggle-group">
-            <button 
-              className={`quick-view-btn ${viewMode === 'word' ? 'active' : ''}`}
-              onClick={() => setViewMode('word')}
-              title="Word Mode (Rich Formatting Edit Canvas)"
-            >
-              📄 Word
-            </button>
-            <button 
-              className={`quick-view-btn ${viewMode === 'split' ? 'active' : ''}`}
-              onClick={() => setViewMode('split')}
-              title="Split View (Side-by-Side Sync View)"
-            >
-              🥞 Split
-            </button>
-            <button 
-              className={`quick-view-btn ${viewMode === 'markdown' ? 'active' : ''}`}
-              onClick={() => setViewMode('markdown')}
-              title="Markdown Mode (Raw Code Editor)"
-            >
-              💻 Code
-            </button>
+    <div className={`ribbon-container ${distractionFree ? 'ribbon-distraction-free' : ''}`}>
+      {!distractionFree && (
+        <>
+          {/* Top Application Title Bar */}
+          <div className="ribbon-title-bar">
+            <div className="ribbon-title-left">
+              <span className="app-logo">📄</span>
+              <span className="app-title">NovaWriter - {filePath ? filePath.split(/[\\/]/).pop() : 'Untitled.md'}</span>
+            </div>
+            <div className="ribbon-title-actions">
+              <button className="quick-action-btn" onClick={onNewFile} title="Create New Document (Ctrl+N)">📄 New</button>
+              <button className="quick-action-btn" onClick={onOpenFile} title="Open File (Ctrl+O)">📂 Open</button>
+              <button className="quick-action-btn primary" onClick={onSave} title="Save File (Ctrl+S)">💾 Save</button>
+              <button className="quick-action-btn" onClick={onExportPDF} title="Export to PDF">📥 Export PDF</button>
+              {onExportDOCX && (
+                <button className="quick-action-btn" onClick={onExportDOCX} title="Export to DOCX">📝 Export DOCX</button>
+              )}
+              
+              <span className="ribbon-title-divider">|</span>
+              
+              <div className="quick-view-toggle-group">
+                <button 
+                  className={`quick-view-btn ${viewMode === 'word' ? 'active' : ''}`}
+                  onClick={() => setViewMode('word')}
+                  title="Word Mode (Rich Formatting Edit Canvas)"
+                >
+                  📄 Word
+                </button>
+                <button 
+                  className={`quick-view-btn ${viewMode === 'split' ? 'active' : ''}`}
+                  onClick={() => setViewMode('split')}
+                  title="Split View (Side-by-Side Sync View)"
+                >
+                  🥞 Split
+                </button>
+                <button 
+                  className={`quick-view-btn ${viewMode === 'markdown' ? 'active' : ''}`}
+                  onClick={() => setViewMode('markdown')}
+                  title="Markdown Mode (Raw Code Editor)"
+                >
+                  💻 Code
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
-      {/* Ribbon Navigation Tabs */}
-      <div className="ribbon-tabs-nav">
-        {tabs.map((tab) => (
-          <button
-            key={tab}
-            className={`ribbon-tab-btn ${activeTab === tab ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab)}
-          >
-            {tab}
-          </button>
-        ))}
-      </div>
+          {/* Ribbon Navigation Tabs */}
+          <div className="ribbon-tabs-nav">
+            {tabs.map((tab) => (
+              <button
+                key={tab}
+                className={`ribbon-tab-btn ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
 
       {/* Active Tab Panel Body */}
-      <div className="ribbon-tab-panel">
+      <div className={`ribbon-tab-panel ${distractionFree ? 'hidden' : ''}`}>
         {activeTab === 'Home' && (
           <div className="ribbon-groups-container">
             {/* Clipboard group */}
@@ -267,7 +288,6 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group" style={{ height: 'auto', minWidth: '220px' }}>
               <div className="ribbon-group-title">Font</div>
               
-              {/* Dropdowns row */}
               <div className="ribbon-group-row" style={{ marginBottom: '4px' }}>
                 <RibbonDropdown
                   value={activeFontFamily}
@@ -310,7 +330,6 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
                 />
               </div>
 
-              {/* Formatting and color buttons row */}
               <div className="ribbon-group-row">
                 <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onBold(); }} title="Bold (Ctrl+B)">B</button>
                 <button className={`ribbon-tool-btn font-italic ${isItalic ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onItalic(); }} title="Italic (Ctrl+I)">I</button>
@@ -319,7 +338,6 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
                 
                 <span className="ribbon-tool-divider"></span>
 
-                {/* Font Color select picker */}
                 <div className="color-tool-wrapper">
                   <RibbonDropdown
                     value={activeColor}
@@ -340,7 +358,6 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
                   />
                 </div>
 
-                {/* Highlight Color picker */}
                 <div className="color-tool-wrapper">
                   <RibbonDropdown
                     value={activeHighlightColor}
@@ -369,18 +386,10 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Paragraph</div>
               <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
-                <button className={`ribbon-tool-btn ${isLeftAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('left'); }} title="Align Left">
-                  ⫷
-                </button>
-                <button className={`ribbon-tool-btn ${isCenterAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('center'); }} title="Align Center">
-                  ☷
-                </button>
-                <button className={`ribbon-tool-btn ${isRightAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('right'); }} title="Align Right">
-                  ⫸
-                </button>
-                <button className={`ribbon-tool-btn ${isJustifyAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('justify'); }} title="Justify">
-                  ☰
-                </button>
+                <button className={`ribbon-tool-btn ${isLeftAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('left'); }} title="Align Left">⫷</button>
+                <button className={`ribbon-tool-btn ${isCenterAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('center'); }} title="Align Center">☷</button>
+                <button className={`ribbon-tool-btn ${isRightAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('right'); }} title="Align Right">⫸</button>
+                <button className={`ribbon-tool-btn ${isJustifyAlign ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onAlignText('justify'); }} title="Justify">☰</button>
               </div>
             </div>
 
@@ -408,7 +417,6 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
 
         {activeTab === 'Insert' && (
           <div className="ribbon-groups-container">
-            {/* Tables group */}
             <div className="ribbon-group">
               <div className="ribbon-group-title">Tables</div>
               <div className="ribbon-group-row">
@@ -419,7 +427,36 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
               </div>
             </div>
 
-            {/* Visual illustrations & diagrams */}
+            <div className="ribbon-group">
+              <div className="ribbon-group-title">Lists</div>
+              <div className="ribbon-group-row">
+                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertTaskList?.(); }} title="Insert Task List">
+                  <span className="btn-icon">☑</span>
+                  <span className="btn-text">Task List</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="ribbon-group">
+              <div className="ribbon-group-title">Links</div>
+              <div className="ribbon-group-row">
+                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertLink?.(); }} title="Insert Link">
+                  <span className="btn-icon">🔗</span>
+                  <span className="btn-text">Insert Link</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="ribbon-group">
+              <div className="ribbon-group-title">Math</div>
+              <div className="ribbon-group-row">
+                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertMath?.(); }} title="Insert Math Formula">
+                  <span className="btn-icon">∑</span>
+                  <span className="btn-text">Math Formula</span>
+                </button>
+              </div>
+            </div>
+
             <div className="ribbon-group">
               <div className="ribbon-group-title">Illustrations & Charts</div>
               <div className="ribbon-group-row">
@@ -434,7 +471,6 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
 
         {activeTab === 'Layout' && (
           <div className="ribbon-groups-container">
-            {/* Physical Page configuration layout details */}
             <div className="ribbon-group">
               <div className="ribbon-group-title">Margins Setup</div>
               <div className="ribbon-group-row">
@@ -461,9 +497,36 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
           </div>
         )}
 
+        {activeTab === 'References' && (
+          <div className="ribbon-groups-container">
+            <div className="ribbon-group" style={{ height: 'auto' }}>
+              <div className="ribbon-group-title">Table of Contents</div>
+              <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
+                <button 
+                  className="ribbon-tool-btn insert-block-btn" 
+                  onMouseDown={(e) => { e.preventDefault(); onInsertTOC?.(); }} 
+                  title="Insert Table of Contents"
+                >
+                  <span className="btn-icon">📑</span>
+                  <span className="btn-text">Insert Table of Contents</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="ribbon-group" style={{ height: 'auto' }}>
+              <div className="ribbon-group-title">Export</div>
+              <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center', gap: 8 }}>
+                <button className="quick-action-btn" onClick={onExportPDF} title="Export as PDF">📥 Export PDF</button>
+                {onExportDOCX && (
+                  <button className="quick-action-btn" onClick={onExportDOCX} title="Export as DOCX">📝 Export DOCX</button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {activeTab === 'View' && (
           <div className="ribbon-groups-container">
-            {/* Workspace split view toggling */}
             <div className="ribbon-group">
               <div className="ribbon-group-title">Workspace View</div>
               <div className="ribbon-group-row">
@@ -488,16 +551,72 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
               </div>
             </div>
 
-            {/* Premium Theme configuration options */}
             <div className="ribbon-group">
-              <div className="ribbon-group-title">Appearance</div>
+              <div className="ribbon-group-title">Focus Mode</div>
               <div className="ribbon-group-row">
                 <button 
-                  className={`ribbon-tool-btn layout-btn toggle-dark-btn ${isDarkMode ? 'active' : ''}`}
+                  className={`ribbon-tool-btn layout-btn ${distractionFree ? 'active' : ''}`}
+                  onClick={() => onDistractionFreeChange?.(!distractionFree)}
+                >
+                  {distractionFree ? '🔓 Exit Focus' : '🎯 Focus Mode'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'Settings' && (
+          <div className="ribbon-groups-container">
+            <div className="ribbon-group">
+              <div className="ribbon-group-title">Appearance</div>
+              <div className="ribbon-group-row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                <button 
+                  className={`ribbon-tool-btn layout-btn ${isDarkMode ? 'active' : ''}`}
                   onClick={() => setIsDarkMode(!isDarkMode)}
                 >
                   {isDarkMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
                 </button>
+              </div>
+            </div>
+
+            <div className="ribbon-group" style={{ height: 'auto' }}>
+              <div className="ribbon-group-title">Theme Presets</div>
+              <div className="ribbon-group-row" style={{ flexWrap: 'wrap', gap: 8 }}>
+                <button 
+                  className={`ribbon-tool-btn layout-btn ${theme === 'light' ? 'active' : ''}`}
+                  onClick={() => onThemeChange?.('light')}
+                  style={{ borderColor: theme === 'light' ? '#2b579a' : undefined }}
+                >
+                  ☀️ Light
+                </button>
+                <button 
+                  className={`ribbon-tool-btn layout-btn ${theme === 'dark' ? 'active' : ''}`}
+                  onClick={() => onThemeChange?.('dark')}
+                  style={{ borderColor: theme === 'dark' ? '#0078d4' : undefined }}
+                >
+                  🌙 Dark
+                </button>
+                <button 
+                  className={`ribbon-tool-btn layout-btn ${theme === 'sepia' ? 'active' : ''}`}
+                  onClick={() => onThemeChange?.('sepia')}
+                  style={{ borderColor: theme === 'sepia' ? '#704214' : undefined }}
+                >
+                  📜 Sepia
+                </button>
+                <button 
+                  className={`ribbon-tool-btn layout-btn ${theme === 'solarized' ? 'active' : ''}`}
+                  onClick={() => onThemeChange?.('solarized')}
+                  style={{ borderColor: theme === 'solarized' ? '#859900' : undefined }}
+                >
+                  🧪 Solarized
+                </button>
+              </div>
+            </div>
+
+            <div className="ribbon-group" style={{ height: 'auto' }}>
+              <div className="ribbon-group-title">Document</div>
+              <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
+                <button className="quick-action-btn" onClick={onSave} title="Check file details">💾 Save</button>
               </div>
             </div>
           </div>
