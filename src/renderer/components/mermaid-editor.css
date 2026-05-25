@@ -60,11 +60,16 @@
   width: 100%;
   display: flex;
   justify-content: center;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 .mermaid-svg-frame svg {
-  pointer-events: none;
+  pointer-events: auto;
+}
+
+.mermaid-svg-frame .node {
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 
