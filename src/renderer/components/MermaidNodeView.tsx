@@ -20,8 +20,17 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
   const [tempCode, setTempCode] = useState<string>(node.attrs.code)
   const [width, setWidth] = useState<number>(node.attrs.width || 600)
   const [isResizing, setIsResizing] = useState<boolean>(false)
-  const renderIdRef = useRef<string>(`mermaid-${Math.floor(Math.random() * 1000000)}`)
+  const [editingNode, setEditingNode] = useState<{
+    id: string
+    text: string
+    x: number
+    y: number
+    width: number
+    height: number
+  } | null>(null)
 
+  const renderIdRef = useRef<string>(`mermaid-${Math.floor(Math.random() * 1000000)}`)
+  const containerRef = useRef<HTMLDivElement>(null)
   const startXRef = useRef(0)
   const startWidthRef = useRef(0)
   const widthRef = useRef(width)
@@ -75,6 +84,60 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
     setIsEditing(false)
   }
 
+  const updateMermaidNodeText = (code: string, nodeId: string, newText: string): string => {
+    const escapeRegExp = (str: string) => str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')
+    // Match nodeId followed by brackets/braces/quotes containing the old text.
+    const regex = new RegExp(`^(\\s*${escapeRegExp(nodeId)})\\s*([\\[\\(\\{>]+(?:\\\\|/)?(?:")?)(.*?)(?:")?(?:\\\\|/)?([\\]\\)\\}]+)`, 'gm')
+    
+    return code.replace(regex, (_match, prefix, openBrackets, _label, closeBrackets) => {
+      return `${prefix}${openBrackets}${newText}${closeBrackets}`
+    })
+  }
+
+  const handleInlineEditApply = () => {
+    if (!editingNode) return
+    const updatedCode = updateMermaidNodeText(node.attrs.code, editingNode.id, editingNode.text)
+    updateAttributes({ code: updatedCode })
+    setTempCode(updatedCode)
+    setEditingNode(null)
+  }
+
+  const handleContainerClick = (e: React.MouseEvent) => {
+    if (isResizing) return
+
+    // Traverse up to see if a node default group was clicked
+    const nodeGroup = (e.target as HTMLElement).closest('.node')
+    if (nodeGroup) {
+      e.preventDefault()
+      e.stopPropagation()
+      
+      const rawId = nodeGroup.getAttribute('id') || ''
+      let parsedId = rawId.replace(/^flowchart-/, '')
+      if (/-\d+$/.test(parsedId)) {
+        parsedId = parsedId.replace(/-\d+$/, '')
+      }
+
+      const text = nodeGroup.textContent?.trim() || ''
+      const rect = nodeGroup.getBoundingClientRect()
+      
+      if (containerRef.current) {
+        const containerRect = containerRef.current.getBoundingClientRect()
+        setEditingNode({
+          id: parsedId,
+          text,
+          x: rect.left - containerRect.left,
+          y: rect.top - containerRect.top,
+          width: rect.width,
+          height: rect.height,
+        })
+      }
+      return
+    }
+
+    // Clicked elsewhere on the diagram (like background, lines) -> open standard card editor
+    setIsEditing(true)
+  }
+
   const handleResizeMouseDown = useCallback((e: React.MouseEvent, corner: string) => {
     e.preventDefault()
     e.stopPropagation()
@@ -111,10 +174,11 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
   return (
     <NodeViewWrapper className="mermaid-wrapper" contentEditable={false}>
       <div 
+        ref={containerRef}
         className={`mermaid-rendered-container ${isEditing ? 'blurred' : ''} ${selected ? 'selected' : ''} ${isResizing ? 'resizing' : ''}`}
         style={{ width: `${width}px`, maxWidth: '100%' }}
-        onClick={() => !isResizing && setIsEditing(true)}
-        title="Click to edit diagram, drag handles to resize"
+        onClick={handleContainerClick}
+        title="Click node to edit inline, click empty space to edit code, drag handles to resize"
       >
         {svg ? (
           <div className="mermaid-svg-frame" dangerouslySetInnerHTML={{ __html: svg }} />
@@ -124,8 +188,39 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
           </div>
         )}
 
+        {/* Inline Node Text Input Overlay */}
+        {editingNode && (
+          <input
+            type="text"
+            className="mermaid-inline-input"
+            value={editingNode.text}
+            style={{
+              position: 'absolute',
+              top: `${editingNode.y}px`,
+              left: `${editingNode.x}px`,
+              width: `${editingNode.width}px`,
+              height: `${editingNode.height}px`,
+              fontSize: '12px',
+              textAlign: 'center',
+              zIndex: 100,
+            }}
+            onChange={(e) => setEditingNode({ ...editingNode, text: e.target.value })}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleInlineEditApply()
+              } else if (e.key === 'Escape') {
+                setEditingNode(null)
+              }
+            }}
+            onBlur={handleInlineEditApply}
+            onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+            autoFocus
+          />
+        )}
+
         {/* Resizing handles when selected */}
-        {selected && (
+        {selected && !editingNode && (
           <>
             <div className="resize-handle resize-handle-se" onMouseDown={(e) => handleResizeMouseDown(e, 'se')} />
             <div className="resize-handle resize-handle-sw" onMouseDown={(e) => handleResizeMouseDown(e, 'sw')} />
@@ -175,7 +270,7 @@ export const MermaidExtension = Node.create({
   addAttributes() {
     return {
       code: {
-        default: 'graph TD\n  A[Start] --> B(End]',
+        default: 'graph TD\n  A[Start] --> B(End)',
       },
       width: {
         default: 600,

@@ -234,3 +234,30 @@
 .dark-mode .editor-action-btn.apply:hover {
   background-color: #1085e5;
 }
+
+/* Inline diagram node text editor input styles */
+.mermaid-inline-input {
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(4px);
+  border: 2px solid #2b579a;
+  border-radius: 4px;
+  color: #323130;
+  font-family: inherit;
+  outline: none;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  padding: 2px 6px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.dark-mode .mermaid-inline-input {
+  background: rgba(30, 30, 30, 0.96);
+  border-color: #0078d4;
+  color: #cccccc;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.mermaid-inline-input:focus {
+  border-color: #0078d4;
+  box-shadow: 0 0 0 2px rgba(0, 120, 212, 0.25);
+}
