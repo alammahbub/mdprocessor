@@ -254,15 +254,6 @@ export const WordEditor: React.FC<WordEditorProps> = ({
     },
   })
 
-  // Set editorInstance to null on unmount
-  useEffect(() => {
-    return () => {
-      if (onEditorReady) {
-        onEditorReady(null)
-      }
-    }
-  }, [])
-
   // Sync from external source (CodeMirror markdown editor) into ProseMirror.
   // Skip when the change originated from this editor's own onUpdate.
   useEffect(() => {
