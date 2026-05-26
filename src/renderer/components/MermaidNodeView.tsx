@@ -128,10 +128,11 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
       e.stopPropagation()
       
       const rawId = nodeGroup.getAttribute('id') || ''
-      let parsedId = rawId.replace(/^flowchart-/, '')
-      if (/-\d+$/.test(parsedId)) {
-        parsedId = parsedId.replace(/-\d+$/, '')
-      }
+      // Strip render prefix (e.g. "mermaid-543040-"), standard flowchart prefixes, and any trailing digits
+      let parsedId = rawId.replace(/^mermaid-\d+-/, '')
+      parsedId = parsedId.replace(/^flowchart-node-/, '')
+      parsedId = parsedId.replace(/^flowchart-/, '')
+      parsedId = parsedId.replace(/-\d+$/, '')
 
       const text = nodeGroup.textContent?.trim() || ''
       const rect = nodeGroup.getBoundingClientRect()
