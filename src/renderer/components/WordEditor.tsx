@@ -150,7 +150,8 @@ interface WordEditorProps {
   marginType: 'normal' | 'narrow' | 'wide'
   isFocused: boolean
   onEditorReady?: (editor: any) => void
-  onSelectionChange?: () => void
+  onSelectionChange?: (anchor: number, head: number) => void
+  selection?: { anchor: number; head: number } | null
 }
 
 export const WordEditor: React.FC<WordEditorProps> = ({
@@ -159,6 +160,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
   marginType,
   onEditorReady,
   onSelectionChange,
+  selection,
 }) => {
   // Track whether the latest value change came from this editor's own onUpdate.
   const isLocalUpdateRef = useRef(false)
@@ -222,9 +224,9 @@ export const WordEditor: React.FC<WordEditorProps> = ({
         console.error('[WordEditor] getMarkdown() error:', err)
       }
     },
-    onSelectionUpdate: () => {
+    onSelectionUpdate: ({ editor }) => {
       if (onSelectionChange) {
-        onSelectionChange()
+        onSelectionChange(editor.state.selection.anchor, editor.state.selection.head)
       }
     },
     editorProps: {
@@ -284,6 +286,23 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       // Empty editor or serialization error — safe to ignore
     }
   }, [value, editor])
+
+  // Sync selection from external source (CodeMirror markdown editor) into Tiptap
+  useEffect(() => {
+    if (!editor || !selection || editor.isDestroyed) return
+
+    const { anchor, head } = selection
+    const docSize = editor.state.doc.content.size
+    const safeAnchor = Math.min(docSize, Math.max(1, anchor))
+    const safeHead = Math.min(docSize, Math.max(1, head))
+
+    // Compare with current Tiptap selection to avoid feedback loops
+    const currentSel = editor.state.selection
+    if (currentSel.anchor === safeAnchor && currentSel.head === safeHead) return
+
+    isLocalUpdateRef.current = true
+    editor.commands.setTextSelection({ from: safeAnchor, to: safeHead })
+  }, [selection, editor])
 
   // Get margin class name
   const getMarginClass = () => {

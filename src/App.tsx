@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { RibbonToolbar } from './renderer/components/RibbonToolbar'
 import { WordEditor } from './renderer/components/WordEditor'
 import { MarkdownEditor } from './renderer/components/MarkdownEditor'
@@ -171,6 +171,74 @@ function addRecentFile(filePath: string) {
   saveRecentFiles(recent)
 }
 
+// Maps a ProseMirror content index to the corresponding character position in Markdown
+function mapProseMirrorToMarkdown(editor: any, pos: number, markdownText: string): number {
+  if (pos <= 0) return 0
+  if (pos >= editor.state.doc.content.size) return markdownText.length
+
+  const cleanText = editor.state.doc.textBetween(0, pos, '\n', '\n')
+  
+  let cleanIdx = 0
+  let mdIdx = 0
+  
+  while (cleanIdx < cleanText.length && mdIdx < markdownText.length) {
+    const cleanChar = cleanText[cleanIdx]
+    const mdChar = markdownText[mdIdx]
+    
+    if (cleanChar === mdChar) {
+      cleanIdx++
+      mdIdx++
+    } else {
+      mdIdx++
+    }
+  }
+  
+  return mdIdx
+}
+
+// Maps a raw Markdown character index to the corresponding content position in ProseMirror (Tiptap)
+function mapMarkdownToProseMirror(editor: any, mdPos: number, markdownText: string): number {
+  if (mdPos <= 0) return 1
+  const docSize = editor.state.doc.content.size
+  if (mdPos >= markdownText.length) return docSize
+
+  const mdText = markdownText.substring(0, mdPos)
+  const fullCleanText = editor.state.doc.textBetween(0, docSize, '\n', '\n')
+  
+  let cleanIdx = 0
+  let mdIdx = 0
+  
+  while (cleanIdx < fullCleanText.length && mdIdx < mdText.length) {
+    const cleanChar = fullCleanText[cleanIdx]
+    const mdChar = mdText[mdIdx]
+    
+    if (cleanChar === mdChar) {
+      cleanIdx++
+      mdIdx++
+    } else {
+      mdIdx++
+    }
+  }
+  
+  let low = 1
+  let high = docSize
+  let resolvedPos = 1
+  
+  while (low <= high) {
+    const mid = Math.floor((low + high) / 2)
+    const len = editor.state.doc.textBetween(0, mid, '\n', '\n').length
+    
+    if (len >= cleanIdx) {
+      resolvedPos = mid
+      high = mid - 1
+    } else {
+      low = mid + 1
+    }
+  }
+  
+  return resolvedPos
+}
+
 function App() {
   // Application State
   const [markdown, setMarkdown] = useState<string>(DEFAULT_MARKDOWN)
@@ -186,6 +254,9 @@ function App() {
   const [distractionFree, setDistractionFree] = useState<boolean>(false)
   const [theme, setTheme] = useState<string>('light')
   const [recentFiles, setRecentFiles] = useState<{ path: string; name: string; timestamp: number }[]>([])
+  const [wordSelection, setWordSelection] = useState<{ anchor: number; head: number } | null>(null)
+  const [codeSelection, setCodeSelection] = useState<{ anchor: number; head: number } | null>(null)
+  const isSyncingSelectionRef = useRef(false)
   const triggerSelectionTick = () => setSelectionTick((t) => t + 1)
 
   // Editor instance state from WordEditor
@@ -227,6 +298,42 @@ function App() {
   const handleEditorReady = useCallback((editor: any) => {
     setEditorInstance(editor)
   }, [])
+
+  const handleWordSelectionChange = useCallback((anchor: number, head: number) => {
+    triggerSelectionTick() // Update tick for ribbon formatting toolbar state sync
+
+    if (isSyncingSelectionRef.current || viewMode !== 'split') return
+    const editor = editorInstance
+    if (!editor || editor.isDestroyed) return
+
+    isSyncingSelectionRef.current = true
+    try {
+      const mdAnchor = mapProseMirrorToMarkdown(editor, anchor, markdown)
+      const mdHead = mapProseMirrorToMarkdown(editor, head, markdown)
+      setCodeSelection({ anchor: mdAnchor, head: mdHead })
+    } catch (err) {
+      console.warn('[Selection Sync] pm to md error:', err)
+    } finally {
+      isSyncingSelectionRef.current = false
+    }
+  }, [editorInstance, markdown, viewMode])
+
+  const handleCodeSelectionChange = useCallback((anchor: number, head: number) => {
+    if (isSyncingSelectionRef.current || viewMode !== 'split') return
+    const editor = editorInstance
+    if (!editor || editor.isDestroyed) return
+
+    isSyncingSelectionRef.current = true
+    try {
+      const pmAnchor = mapMarkdownToProseMirror(editor, anchor, markdown)
+      const pmHead = mapMarkdownToProseMirror(editor, head, markdown)
+      setWordSelection({ anchor: pmAnchor, head: pmHead })
+    } catch (err) {
+      console.warn('[Selection Sync] md to pm error:', err)
+    } finally {
+      isSyncingSelectionRef.current = false
+    }
+  }, [editorInstance, markdown, viewMode])
 
   // Collapsible Activity History sidebar states and callback
   interface ActivityItem {
@@ -742,6 +849,7 @@ function App() {
         )}
 
         {/* WORD MODE (Rich WYSIWYG Page View) */}
+        {/* WORD MODE (Rich WYSIWYG Page View) */}
         {(viewMode === 'word' || viewMode === 'split') && (
           <div className="workspace-panel word-panel">
             <WordEditor
@@ -750,7 +858,8 @@ function App() {
               marginType={marginType}
               isFocused={true}
               onEditorReady={handleEditorReady}
-              onSelectionChange={triggerSelectionTick}
+              onSelectionChange={handleWordSelectionChange}
+              selection={wordSelection}
             />
           </div>
         )}
@@ -782,6 +891,8 @@ function App() {
               onChange={setMarkdown}
               showLineNumbers={showLineNumbers}
               showInvisibles={showInvisibles}
+              onSelectionChange={handleCodeSelectionChange}
+              selection={codeSelection}
             />
           </div>
         )}

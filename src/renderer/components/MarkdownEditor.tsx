@@ -11,6 +11,8 @@ interface MarkdownEditorProps {
   onChange: (val: string) => void
   showLineNumbers: boolean
   showInvisibles: boolean
+  onSelectionChange?: (anchor: number, head: number) => void
+  selection?: { anchor: number; head: number } | null
 }
 
 export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
@@ -18,6 +20,8 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   onChange,
   showLineNumbers,
   showInvisibles,
+  onSelectionChange,
+  selection,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
@@ -31,6 +35,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       if (update.docChanged && !isUpdatingRef.current) {
         const docString = update.state.doc.toString()
         onChange(docString)
+      }
+      
+      // Capture selection updates from CodeMirror in real-time
+      if (update.selectionSet && !isUpdatingRef.current) {
+        const mainSelection = update.state.selection.main
+        onSelectionChange?.(mainSelection.anchor, mainSelection.head)
       }
     })
 
@@ -108,6 +118,29 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       isUpdatingRef.current = false
     }
   }, [value])
+
+  // Sync selection updates from ProseMirror into CodeMirror
+  useEffect(() => {
+    const view = viewRef.current
+    if (!view || !selection) return
+
+    const { anchor, head } = selection
+    const docLength = view.state.doc.length
+    
+    const safeAnchor = Math.min(docLength, Math.max(0, anchor))
+    const safeHead = Math.min(docLength, Math.max(0, head))
+
+    // Prevent redundant cursor dispatch loops
+    const currentSel = view.state.selection.main
+    if (currentSel.anchor === safeAnchor && currentSel.head === safeHead) return
+
+    isUpdatingRef.current = true
+    view.dispatch({
+      selection: { anchor: safeAnchor, head: safeHead },
+      scrollIntoView: true,
+    })
+    isUpdatingRef.current = false
+  }, [selection])
 
   return (
     <div 
