@@ -81,6 +81,14 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
 
   const handleApplyChanges = () => {
     updateAttributes({ code: tempCode })
+    if (typeof (window as any).logActivity === 'function') {
+      (window as any).logActivity(
+        'Updated Mermaid Diagram Code',
+        '📊',
+        'success',
+        'Full diagram graph definition compiled successfully.'
+      )
+    }
     setIsEditing(false)
   }
 
@@ -99,6 +107,14 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
     const updatedCode = updateMermaidNodeText(node.attrs.code, editingNode.id, editingNode.text)
     updateAttributes({ code: updatedCode })
     setTempCode(updatedCode)
+    if (typeof (window as any).logActivity === 'function') {
+      (window as any).logActivity(
+        `Edited Node "${editingNode.id}" inline`,
+        '📊',
+        'success',
+        `Updated label to: "${editingNode.text}"`
+      )
+    }
     setEditingNode(null)
   }
 
@@ -164,7 +180,16 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
       setIsResizing(false)
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
-      updateAttributes({ width: Math.round(widthRef.current) })
+      const finalWidth = Math.round(widthRef.current)
+      updateAttributes({ width: finalWidth })
+      if (typeof (window as any).logActivity === 'function') {
+        (window as any).logActivity(
+          'Resized Mermaid Diagram',
+          '📊',
+          'success',
+          `Width adjusted to ${finalWidth}px.`
+        )
+      }
     }
 
     document.addEventListener('mousemove', handleMouseMove)

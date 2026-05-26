@@ -54,12 +54,7 @@ Try editing the graph below by clicking on it:
 
 ## Tables Support
 
-| Feature | Status | Priority |
-|:--------|:------:|--------:|
-| Image Resize | ✅ | High |
-| Table Columns | ✅ | High |
-| TOC Generation | ✅ | Medium |
-| Math Formulas | ✅ | High |
+<table data-type="novawriter-table" data-cols="[&quot;Processor Feature&quot;,&quot;Word WYSIWYG Mode&quot;,&quot;Markdown Editor Mode&quot;]" data-rows="[[&quot;Mermaid Graph Compiler&quot;,&quot;✅ Vector SVG Chart renders visually&quot;,&quot;💻 Raw structural node graphs&quot;],[&quot;Interactive Sizing Columns&quot;,&quot;✅ Click and drag cell boundaries&quot;,&quot;🛠️ Automated data attribute sync&quot;],[&quot;Dynamic Sync Verification&quot;,&quot;✅ High-contrast parity logs&quot;,&quot;🔄 Automatic AST synchronization&quot;]]" data-colwidths="[&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;]" style="width: 100%; border-collapse: collapse;"></table>
 
 ## Task Lists
 
@@ -182,7 +177,7 @@ function App() {
   const [filePath, setFilePath] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>('Home')
   const [marginType, setMarginType] = useState<'normal' | 'narrow' | 'wide'>('normal')
-  const [viewMode, setViewMode] = useState<'word' | 'markdown' | 'split'>('split')
+  const [viewMode, setViewMode] = useState<'word' | 'markdown' | 'split'>('word')
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false)
   const [toastMessage, setToastMessage] = useState<string>('')
   const [showLineNumbers, setShowLineNumbers] = useState<boolean>(true)
@@ -266,6 +261,14 @@ function App() {
     }
     setActivities(prev => [newActivity, ...prev.slice(0, 49)])
   }, [])
+
+  // Expose logActivity globally on window for custom node views to use
+  useEffect(() => {
+    (window as any).logActivity = logActivity
+    return () => {
+      delete (window as any).logActivity
+    }
+  }, [logActivity])
 
   // Load recent files on mount
   useEffect(() => {

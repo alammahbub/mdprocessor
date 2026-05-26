@@ -100,8 +100,8 @@ body.solarized-mode .markdown-settings-row {
   height: 100%;
 }
 
-.status-bar-left, 
-.status-bar-center, 
+.status-bar-left,
+.status-bar-center,
 .status-bar-right {
   display: flex;
   align-items: center;
@@ -152,6 +152,7 @@ body.solarized-mode .markdown-settings-row {
     opacity: 0;
     transform: translate(-50%, 20px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -212,12 +213,15 @@ body.solarized-mode .markdown-settings-row {
 .view-mode-markdown .novawriter-markdown-editor-container {
   width: 210mm;
   max-width: 100%;
-  flex: 1; /* Occupy remaining height with vertical stretch */
-  margin-bottom: 40px; /* Elegant buffer padding at the bottom */
+  flex: 1;
+  /* Occupy remaining height with vertical stretch */
+  margin-bottom: 40px;
+  /* Elegant buffer padding at the bottom */
   border-radius: 0 0 6px 6px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  background-color: #1e1e1e; /* Keep IDE dark mode background */
+  background-color: #1e1e1e;
+  /* Keep IDE dark mode background */
   border: 1px solid #2d3139;
   display: flex;
   flex-direction: column;
@@ -644,6 +648,3 @@ body.solarized-mode .markdown-settings-row {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
-
-
-
