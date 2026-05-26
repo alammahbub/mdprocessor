@@ -42,6 +42,46 @@ function injectThemeDirective(code: string, theme: string): string {
   }
 }
 
+// Dynamically adjusts custom inline style statements (e.g. style A fill:...) in the Mermaid code to harmonize with the chosen theme palette
+function updateStyleDefinitions(code: string, theme: string): string {
+  const lines = code.split('\n')
+  const updatedLines = lines.map((line) => {
+    const trimmed = line.trim()
+    if (trimmed.startsWith('style A ')) {
+      switch (theme) {
+        case 'dark':
+          return line.replace(/style A .*/, '  style A fill:#313244,stroke:#cba6f7,stroke-width:2px')
+        case 'forest':
+          return line.replace(/style A .*/, '  style A fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px')
+        case 'neutral':
+          return line.replace(/style A .*/, '  style A fill:#f3f2f1,stroke:#8a8886,stroke-width:2px')
+        case 'base':
+          return line.replace(/style A .*/, '  style A fill:#eae6ff,stroke:#5c2d91,stroke-width:2px')
+        case 'default':
+        default:
+          return line.replace(/style A .*/, '  style A fill:#f9f,stroke:#333,stroke-width:2px')
+      }
+    }
+    if (trimmed.startsWith('style D ')) {
+      switch (theme) {
+        case 'dark':
+          return line.replace(/style D .*/, '  style D fill:#181825,stroke:#a6e3a1,stroke-width:2px')
+        case 'forest':
+          return line.replace(/style D .*/, '  style D fill:#c8e6c9,stroke:#1b5e20,stroke-width:2px')
+        case 'neutral':
+          return line.replace(/style D .*/, '  style D fill:#e1dfdd,stroke:#605e5c,stroke-width:2px')
+        case 'base':
+          return line.replace(/style D .*/, '  style D fill:#f3f0ff,stroke:#805ad5,stroke-width:2px')
+        case 'default':
+        default:
+          return line.replace(/style D .*/, '  style D fill:#bbf,stroke:#f66,stroke-width:2px')
+      }
+    }
+    return line
+  })
+  return updatedLines.join('\n')
+}
+
 // 10 high-fidelity pre-configured Mermaid templates to showcase standard and advanced features
 const MERMAID_TEMPLATES = [
   {
@@ -278,8 +318,9 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
   }
 
   const handleApplyChanges = () => {
+    const updatedCode = updateStyleDefinitions(tempCode, tempTheme)
     updateAttributes({ 
-      code: tempCode,
+      code: updatedCode,
       theme: tempTheme
     })
     if (typeof (window as any).logActivity === 'function') {
@@ -294,8 +335,13 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
   }
 
   const handleThemeQuickChange = (newTheme: string) => {
-    updateAttributes({ theme: newTheme })
+    const updatedCode = updateStyleDefinitions(node.attrs.code, newTheme)
+    updateAttributes({ 
+      theme: newTheme,
+      code: updatedCode
+    })
     setTempTheme(newTheme)
+    setTempCode(updatedCode)
     if (typeof (window as any).logActivity === 'function') {
       (window as any).logActivity(
         `Theme Switched to ${newTheme.toUpperCase()}`,
@@ -563,7 +609,10 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
                   <button
                     key={t.name}
                     className={`mermaid-theme-pill ${tempTheme === t.name ? 'active' : ''}`}
-                    onClick={() => setTempTheme(t.name)}
+                    onClick={() => {
+                      setTempTheme(t.name)
+                      setTempCode(prev => updateStyleDefinitions(prev, t.name))
+                    }}
                     title={t.desc}
                     type="button"
                   >
