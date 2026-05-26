@@ -19,8 +19,36 @@ import Typography from '@tiptap/extension-typography'
 import { MermaidExtension } from './MermaidNodeView'
 import { ImageExtension } from './ImageNodeView'
 import { MathInlineExtension, MathBlockExtension } from './MathExtensions'
+import { Plugin, PluginKey } from '@tiptap/pm/state'
+import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import '../styles/a4-emulator.css'
 import '../styles/image-resizer.css'
+
+// Custom Tiptap extension to draw a synchronized blinking caret when this editor is blurred
+export const SynchronizedCaret = Extension.create({
+  name: 'synchronizedCaret',
+  addProseMirrorPlugins() {
+    const editor = this.editor
+    return [
+      new Plugin({
+        key: new PluginKey('synchronizedCaret'),
+        props: {
+          decorations(state) {
+            const isFocused = editor.isFocused
+            if (!isFocused && state.selection.empty) {
+              const span = document.createElement('span')
+              span.className = 'novawriter-synchronized-caret'
+              return DecorationSet.create(state.doc, [
+                Decoration.widget(state.selection.from, span)
+              ])
+            }
+            return DecorationSet.empty
+          }
+        }
+      })
+    ]
+  }
+})
 
 // Custom Tiptap extension to manage font size (renders as inline styles in standard span tags)
 export const FontSize = Extension.create({
@@ -207,6 +235,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       MathBlockExtension,
       MermaidExtension,
       ImageExtension,
+      SynchronizedCaret,
     ],
     content: value,
     contentType: 'markdown' as any,
@@ -301,7 +330,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
     if (currentSel.anchor === safeAnchor && currentSel.head === safeHead) return
 
     isLocalUpdateRef.current = true
-    editor.commands.setTextSelection({ from: safeAnchor, to: safeHead })
+    editor.chain().setTextSelection({ from: safeAnchor, to: safeHead }).scrollIntoView().run()
   }, [selection, editor])
 
   // Get margin class name

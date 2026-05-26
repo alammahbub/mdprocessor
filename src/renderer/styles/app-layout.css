@@ -648,3 +648,68 @@ body.solarized-mode .markdown-settings-row {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
 }
+
+/* ==========================================================================
+   Synchronized Dual-Editor Caret & Blurred Selection Caret Styles
+   ========================================================================== */
+
+/* Word Mode (WYSIWYG Tiptap) Custom synchronized caret when blurred */
+.novawriter-synchronized-caret {
+  display: inline-block !important;
+  width: 2px !important;
+  height: 1.25em !important;
+  background-color: #2b579a !important;
+  margin-left: -1px !important;
+  margin-right: -1px !important;
+  vertical-align: text-bottom !important;
+  position: relative !important;
+  z-index: 10 !important;
+  animation: novawriter-caret-blink 1.2s infinite steps(2) !important;
+}
+
+.dark-mode .novawriter-synchronized-caret {
+  background-color: #52a2f5 !important;
+}
+
+body.sepia-mode .novawriter-synchronized-caret {
+  background-color: #7b4f23 !important;
+}
+
+body.solarized-mode .novawriter-synchronized-caret {
+  background-color: #2aa198 !important;
+}
+
+@keyframes novawriter-caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Markdown Mode (CodeMirror 6) custom blinking cursor when blurred */
+.cm-editor:not(.cm-focused) .cm-cursorLayer,
+.cm-editor:not(.cm-focused) .cm-cursor-layer {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  animation: cm-blink 1.2s infinite steps(2) !important;
+}
+
+.cm-editor:not(.cm-focused) .cm-cursor {
+  border-left: 1.8px solid #abb2bf !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.cm-editor:not(.cm-focused) .cm-cursor-primary {
+  border-left: 1.8px solid #52a2f5 !important;
+  display: block !important;
+  visibility: visible !important;
+}
+
+.dark-mode .cm-editor:not(.cm-focused) .cm-cursor-primary {
+  border-left-color: #52a2f5 !important;
+}
+
+@keyframes cm-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
