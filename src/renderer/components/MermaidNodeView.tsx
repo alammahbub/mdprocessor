@@ -13,11 +13,172 @@ mermaid.initialize({
   securityLevel: 'loose',
 })
 
+// Regex-based robust parser to inject/merge selected theme into Mermaid's initialization directive
+function injectThemeDirective(code: string, theme: string): string {
+  const cleanCode = code.trim()
+  
+  // Regex to match the Mermaid init directive at the start of code
+  const directiveRegex = /^%%\s*\{\s*init\s*:\s*(\{[\s\S]*?\}\s*)\s*\}\s*%%/i
+  const match = cleanCode.match(directiveRegex)
+  
+  if (match) {
+    let configStr = match[1].trim()
+    
+    // Check if 'theme' or "theme" key already exists
+    const themeKeyRegex = /(["']?theme["']?\s*:\s*)(["'])(.*?)\2/
+    if (themeKeyRegex.test(configStr)) {
+      // Replace existing theme
+      configStr = configStr.replace(themeKeyRegex, `$1$2${theme}$2`)
+    } else {
+      // Insert theme at the beginning of the object config
+      configStr = configStr.replace(/^\{\s*/, `{\n  'theme': '${theme}',\n  `)
+    }
+    
+    // Replace the old directive with the new one
+    return cleanCode.replace(directiveRegex, `%%{init: ${configStr}}%%`)
+  } else {
+    // No directive exists, prepend a new one
+    return `%%{init: {'theme': '${theme}'}}%%\n${cleanCode}`
+  }
+}
+
+// 10 high-fidelity pre-configured Mermaid templates to showcase standard and advanced features
+const MERMAID_TEMPLATES = [
+  {
+    name: 'Flowchart',
+    icon: '📊',
+    code: `graph TD
+  A[Start Coding] --> B(Scaffold Electron + React)
+  B --> C{Bidirectional Sync}
+  C -->|Yes| D[Wow User with High Fidelity]
+  C -->|No| E[Cursor Jump Errors]
+  style A fill:#f9f,stroke:#333,stroke-width:2px
+  style D fill:#bbf,stroke:#f66,stroke-width:2px`
+  },
+  {
+    name: 'Sequence Diagram',
+    icon: '💬',
+    code: `sequenceDiagram
+  Alice->>John: Hello John, how are you?
+  loop Healthcheck
+      John->>John: Fight against bugs
+  end
+  Note right of John: Rational thoughts!
+  John-->>Alice: Great!
+  John->>Bob: How about you?
+  Bob-->>John: Jolly good!`
+  },
+  {
+    name: 'Gantt Chart',
+    icon: '📅',
+    code: `gantt
+  title A Gantt Diagram
+  dateFormat YYYY-MM-DD
+  section Section
+    A task           :a1, 2026-05-20, 30d
+    Another task     :after a1, 20d
+  section Another
+    Task in Another  :2026-05-26, 12d
+    another task     :24d`
+  },
+  {
+    name: 'Class Diagram',
+    icon: '🧬',
+    code: `classDiagram
+  Animal <|-- Duck
+  Animal <|-- Fish
+  Animal <|-- Zebra
+  Animal : +int age
+  Animal : +String gender
+  Animal: +isMammal()
+  Animal: +mate()
+  class Duck{
+      +String beakColor
+      +swim()
+      +quack()
+  }
+  class Fish{
+      -int sizeInFeet
+      -canEat()
+  }`
+  },
+  {
+    name: 'State Diagram',
+    icon: '🔄',
+    code: `stateDiagram-v2
+  [*] --> Still
+  Still --> [*]
+  Still --> Moving
+  Moving --> Still
+  Moving --> Crash
+  Crash --> [*]`
+  },
+  {
+    name: 'Entity Relationship',
+    icon: '🗄️',
+    code: `erDiagram
+  CUSTOMER ||--o{ ORDER : places
+  ORDER ||--|{ LINE-ITEM : contains
+  CUSTOMER }|..|{ DELIVERY-ADDRESS : uses`
+  },
+  {
+    name: 'Mindmap',
+    icon: '🧠',
+    code: `mindmap
+  root((NovaWriter))
+    Aesthetic UI
+      Glassmorphism
+      Harmonious themes
+    AST Sync Engine
+      Tiptap Core
+      CodeMirror 6
+    Diagrams
+      Mermaid Charts
+      Math LaTeX`
+  },
+  {
+    name: 'Pie Chart',
+    icon: '🍰',
+    code: `pie title Key Features of NovaWriter
+  "Word Canvas WYSIWYG" : 45
+  "Markdown Live Sync" : 35
+  "Mermaid Vector Render" : 15
+  "KaTeX Math Formulas" : 5`
+  },
+  {
+    name: 'Timeline',
+    icon: '⏳',
+    code: `timeline
+  title History of Word Processors
+  1983 : Microsoft Word 1.0 released
+  2004 : Markdown syntax created by John Gruber
+  2015 : VS Code released by Microsoft
+  2026 : NovaWriter hybrid processor launched`
+  },
+  {
+    name: 'Git Graph',
+    icon: '🌿',
+    code: `gitGraph
+  commit
+  commit
+  branch develop
+  checkout develop
+  commit
+  commit
+  checkout main
+  merge develop
+  commit`
+  }
+]
+
 export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected }) => {
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string>('')
   const [isEditing, setIsEditing] = useState<boolean>(false)
   const [tempCode, setTempCode] = useState<string>(node.attrs.code)
+  const [tempTheme, setTempTheme] = useState<string>(node.attrs.theme || 'neutral')
+  const [syntaxError, setSyntaxError] = useState<string>('')
+  const [isValidating, setIsValidating] = useState<boolean>(false)
   const [width, setWidth] = useState<number>(node.attrs.width || 600)
   const [isResizing, setIsResizing] = useState<boolean>(false)
   const [editingNode, setEditingNode] = useState<{
@@ -47,7 +208,12 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
     }
   }, [node.attrs.width])
 
-  const compileDiagram = async (code: string) => {
+  // Sync tempTheme state when node attributes update externally
+  useEffect(() => {
+    setTempTheme(node.attrs.theme || 'neutral')
+  }, [node.attrs.theme])
+
+  const compileDiagram = async (code: string, currentTheme: string = node.attrs.theme || 'neutral') => {
     try {
       setError('')
       const cleanCode = code.trim()
@@ -56,8 +222,11 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
         return
       }
 
+      // Prepend or merge the theme directive before compiling
+      const themedCode = injectThemeDirective(cleanCode, currentTheme)
+
       // Render the mermaid chart to SVG asynchronously
-      const { svg: renderedSvg } = await mermaid.render(renderIdRef.current, cleanCode)
+      const { svg: renderedSvg } = await mermaid.render(renderIdRef.current, themedCode)
       setSvg(renderedSvg)
     } catch (err: any) {
       console.warn('Mermaid compile warning:', err)
@@ -70,26 +239,71 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
     }
   }
 
-  // Compile when code attributes update
+  // Compile when code or theme attributes update
   useEffect(() => {
-    compileDiagram(node.attrs.code)
-  }, [node.attrs.code])
+    compileDiagram(node.attrs.code, node.attrs.theme || 'neutral')
+  }, [node.attrs.code, node.attrs.theme])
+
+  // Debounced Syntax Validation inside the Edit Overlay Modal
+  useEffect(() => {
+    if (!isEditing) {
+      setSyntaxError('')
+      return
+    }
+
+    const timer = setTimeout(async () => {
+      const codeToValidate = tempCode.trim()
+      if (!codeToValidate) {
+        setSyntaxError('')
+        return
+      }
+
+      setIsValidating(true)
+      try {
+        const themedCode = injectThemeDirective(codeToValidate, tempTheme)
+        await mermaid.parse(themedCode)
+        setSyntaxError('')
+      } catch (err: any) {
+        setSyntaxError(err?.message || 'Syntax Error: Check connection arrows or syntax keywords.')
+      } finally {
+        setIsValidating(false)
+      }
+    }, 350)
+
+    return () => clearTimeout(timer)
+  }, [tempCode, tempTheme, isEditing])
 
   const handleCodeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setTempCode(e.target.value)
   }
 
   const handleApplyChanges = () => {
-    updateAttributes({ code: tempCode })
+    updateAttributes({ 
+      code: tempCode,
+      theme: tempTheme
+    })
     if (typeof (window as any).logActivity === 'function') {
       (window as any).logActivity(
-        'Updated Mermaid Diagram Code',
+        'Updated Mermaid Diagram',
         '📊',
         'success',
-        'Full diagram graph definition compiled successfully.'
+        `Graph compiled successfully with "${tempTheme}" color palette theme.`
       )
     }
     setIsEditing(false)
+  }
+
+  const handleThemeQuickChange = (newTheme: string) => {
+    updateAttributes({ theme: newTheme })
+    setTempTheme(newTheme)
+    if (typeof (window as any).logActivity === 'function') {
+      (window as any).logActivity(
+        `Theme Switched to ${newTheme.toUpperCase()}`,
+        '🎨',
+        'success',
+        `Mermaid diagram rendered with the "${newTheme}" color theme.`
+      )
+    }
   }
 
   const updateMermaidNodeText = (code: string, nodeId: string, newText: string): string => {
@@ -214,6 +428,39 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
           </div>
         )}
 
+        {/* Floating Glassmorphism Toolbar */}
+        <div className="mermaid-floating-toolbar" onClick={(e) => e.stopPropagation()}>
+          <div className="toolbar-section theme-section">
+            <span className="toolbar-label">Palette:</span>
+            <div className="toolbar-theme-buttons">
+              {[
+                { name: 'default', color: '#2b579a', label: 'Default' },
+                { name: 'neutral', color: '#8a8886', label: 'Neutral' },
+                { name: 'dark', color: '#201f1e', label: 'Dark' },
+                { name: 'forest', color: '#107c41', label: 'Forest' },
+                { name: 'base', color: '#5c2d91', label: 'Base' },
+              ].map((t) => (
+                <button
+                  key={t.name}
+                  className={`toolbar-theme-btn ${node.attrs.theme === t.name || (!node.attrs.theme && t.name === 'neutral') ? 'active' : ''}`}
+                  style={{ '--theme-color': t.color } as React.CSSProperties}
+                  onClick={() => handleThemeQuickChange(t.name)}
+                  title={`Switch to ${t.label} theme`}
+                />
+              ))}
+            </div>
+            <span className="toolbar-active-theme-text">({node.attrs.theme || 'neutral'})</span>
+          </div>
+          <div className="toolbar-divider" />
+          <button 
+            className="toolbar-action-btn edit-code-btn"
+            onClick={() => setIsEditing(true)}
+            title="Edit Diagram Code (Mermaid DSL)"
+          >
+            📝 Edit Code
+          </button>
+        </div>
+
         {/* Inline Node Text Input Overlay */}
         {editingNode && (
           <input
@@ -265,20 +512,102 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
         <div className="mermaid-editor-overlay" onMouseDown={(e) => e.stopPropagation()}>
           <div className="mermaid-editor-card">
             <div className="mermaid-editor-header">
-              <span>Edit Mermaid Graph Code</span>
+              <span>📊 Edit Mermaid Diagram</span>
               <button className="close-overlay-btn" onClick={() => setIsEditing(false)}>✕</button>
             </div>
-            <textarea
-              className="mermaid-code-input"
-              value={tempCode}
-              onChange={handleCodeChange}
-              placeholder="e.g.&#10;graph TD&#10;  A[Start] --> B(End)"
-              rows={6}
-              autoFocus
-            />
+
+            {/* Template Selection dropdown */}
+            <div className="mermaid-template-selector-group">
+              <label className="mermaid-field-label">Insert Diagram Preset Template</label>
+              <select 
+                className="mermaid-template-select"
+                onChange={(e) => {
+                  const val = e.target.value
+                  if (val) {
+                    const template = MERMAID_TEMPLATES.find(t => t.name === val)
+                    if (template) {
+                      setTempCode(template.code)
+                      if (typeof (window as any).logActivity === 'function') {
+                        (window as any).logActivity(
+                          `Loaded Template "${template.name}"`,
+                          '📊',
+                          'success',
+                          `Successfully populated Mermaid editor canvas with default ${template.name} graph.`
+                        )
+                      }
+                    }
+                    e.target.value = '' // Reset selection
+                  }
+                }}
+              >
+                <option value="">-- Choose a template to load --</option>
+                {MERMAID_TEMPLATES.map((t) => (
+                  <option key={t.name} value={t.name}>
+                    {t.icon} {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Theme Selector segmented control */}
+            <div className="mermaid-theme-selector-group">
+              <label className="mermaid-field-label">Chart Palette Theme</label>
+              <div className="mermaid-theme-pills">
+                {[
+                  { name: 'default', label: 'Default 🔵', desc: 'Classic blue/green layout' },
+                  { name: 'neutral', label: 'Neutral ⚪', desc: 'Sleek monochromatic print' },
+                  { name: 'dark', label: 'Dark ⚫', desc: 'High-contrast slate dark' },
+                  { name: 'forest', label: 'Forest 🟢', desc: 'Earthy green shades' },
+                  { name: 'base', label: 'Base 🟣', desc: 'Customizable minimalist theme' },
+                ].map((t) => (
+                  <button
+                    key={t.name}
+                    className={`mermaid-theme-pill ${tempTheme === t.name ? 'active' : ''}`}
+                    onClick={() => setTempTheme(t.name)}
+                    title={t.desc}
+                    type="button"
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div className="mermaid-code-field-wrapper">
+              <label className="mermaid-field-label">Graph DSL Code</label>
+              <textarea
+                className="mermaid-code-input"
+                value={tempCode}
+                onChange={handleCodeChange}
+                placeholder="e.g.&#10;graph TD&#10;  A[Start] --> B(End)"
+                rows={8}
+                autoFocus
+              />
+            </div>
+
+            {/* Live syntax validation status indicator */}
+            <div className={`mermaid-modal-validation-bar ${syntaxError ? 'invalid' : tempCode.trim() ? 'valid' : ''}`}>
+              {isValidating ? (
+                <span className="validation-text checking">🔄 Validating syntax...</span>
+              ) : syntaxError ? (
+                <span className="validation-text invalid">⚠️ {syntaxError.split('\n')[0]}</span>
+              ) : tempCode.trim() ? (
+                <span className="validation-text valid">✓ Syntax Valid</span>
+              ) : (
+                <span className="validation-text empty">Enter mermaid code to validate</span>
+              )}
+            </div>
+
             <div className="mermaid-editor-actions">
               <button className="editor-action-btn cancel" onClick={() => setIsEditing(false)}>Cancel</button>
-              <button className="editor-action-btn apply" onClick={handleApplyChanges}>Update Diagram</button>
+              <button 
+                className="editor-action-btn apply" 
+                onClick={handleApplyChanges}
+                disabled={!!syntaxError}
+                style={{ opacity: syntaxError ? 0.6 : 1, cursor: syntaxError ? 'not-allowed' : 'pointer' }}
+              >
+                Update Diagram
+              </button>
             </div>
           </div>
         </div>
@@ -301,6 +630,9 @@ export const MermaidExtension = Node.create({
       width: {
         default: 600,
       },
+      theme: {
+        default: 'neutral',
+      },
     }
   },
 
@@ -314,6 +646,7 @@ export const MermaidExtension = Node.create({
           return { 
             code: element.getAttribute('data-code') || '',
             width: parseInt(element.getAttribute('data-width') || '600') || 600,
+            theme: element.getAttribute('data-theme') || 'neutral',
           }
         }
       },
@@ -325,6 +658,7 @@ export const MermaidExtension = Node.create({
       'data-type': 'mermaid', 
       'data-code': HTMLAttributes.code,
       'data-width': String(HTMLAttributes.width || 600),
+      'data-theme': HTMLAttributes.theme || 'neutral',
     }), 0]
   },
 
@@ -333,7 +667,8 @@ export const MermaidExtension = Node.create({
     const code = node.attrs?.code || ''
     const escaped = code.replace(/"/g, '&quot;')
     const width = node.attrs?.width || 600
-    return `<div data-type="mermaid" data-code="${escaped}" data-width="${width}"></div>\n`
+    const theme = node.attrs?.theme || 'neutral'
+    return `<div data-type="mermaid" data-code="${escaped}" data-width="${width}" data-theme="${theme}"></div>\n`
   },
 
   addNodeView() {

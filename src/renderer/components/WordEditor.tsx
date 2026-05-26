@@ -246,7 +246,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
             'href', 'src', 'alt', 'width', 'height', 'style', 'class',
             'id', 'title', 'target', 'rel', 'data-type', 'data-code',
             'data-cols', 'data-rows', 'data-colwidths',
-            'data-math-inline', 'data-math-block',
+            'data-math-inline', 'data-math-block', 'data-theme',
           ],
           ALLOW_DATA_ATTR: true,
         })
