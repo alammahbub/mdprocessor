@@ -26,6 +26,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const isUpdatingRef = useRef<boolean>(false)
+  const isExternalSelectionUpdateRef = useRef<boolean>(false)
 
   // Initialize CodeMirror 6
   useEffect(() => {
@@ -38,9 +39,15 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       }
       
       // Capture selection updates from CodeMirror in real-time
-      if (update.selectionSet && !isUpdatingRef.current) {
-        const mainSelection = update.state.selection.main
-        onSelectionChange?.(mainSelection.anchor, mainSelection.head)
+      if (update.selectionSet) {
+        if (isExternalSelectionUpdateRef.current) {
+          isExternalSelectionUpdateRef.current = false
+          return
+        }
+        if (!isUpdatingRef.current) {
+          const mainSelection = update.state.selection.main
+          onSelectionChange?.(mainSelection.anchor, mainSelection.head)
+        }
       }
     })
 
@@ -134,12 +141,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
     const currentSel = view.state.selection.main
     if (currentSel.anchor === safeAnchor && currentSel.head === safeHead) return
 
-    isUpdatingRef.current = true
+    isExternalSelectionUpdateRef.current = true
     view.dispatch({
       selection: { anchor: safeAnchor, head: safeHead },
       scrollIntoView: true,
     })
-    isUpdatingRef.current = false
+    isExternalSelectionUpdateRef.current = false
   }, [selection])
 
   return (

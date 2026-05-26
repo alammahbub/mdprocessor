@@ -192,6 +192,8 @@ export const WordEditor: React.FC<WordEditorProps> = ({
 }) => {
   // Track whether the latest value change came from this editor's own onUpdate.
   const isLocalUpdateRef = useRef(false)
+  // Track whether the latest selection change came from an external sync update.
+  const isExternalSelectionUpdateRef = useRef(false)
 
   const editor = useEditor({
     extensions: [
@@ -254,6 +256,10 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       }
     },
     onSelectionUpdate: ({ editor }) => {
+      if (isExternalSelectionUpdateRef.current) {
+        isExternalSelectionUpdateRef.current = false
+        return
+      }
       if (onSelectionChange) {
         onSelectionChange(editor.state.selection.anchor, editor.state.selection.head)
       }
@@ -329,7 +335,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
     const currentSel = editor.state.selection
     if (currentSel.anchor === safeAnchor && currentSel.head === safeHead) return
 
-    isLocalUpdateRef.current = true
+    isExternalSelectionUpdateRef.current = true
     editor.chain().setTextSelection({ from: safeAnchor, to: safeHead }).scrollIntoView().run()
   }, [selection, editor])
 
