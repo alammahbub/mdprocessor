@@ -86,7 +86,7 @@ export const TableNodeView: React.FC<NodeViewProps> = ({ node, selected }) => {
   return (
     <NodeViewWrapper className="table-nodeview-wrapper">
       <div className={`table-resize-container ${selected ? 'selected' : ''} ${resizingCol !== null ? 'resizing' : ''}`}>
-        <table ref={tableRef} className="novawriter-table" data-type="novawriter-table">
+        <table ref={tableRef} className="supermd-table" data-type="supermd-table">
           <colgroup>
             {cols.map((_: string, i: number) => (
               <col key={i} style={{ width: colWidths[i] || 'auto' }} />
@@ -134,7 +134,7 @@ export const TableNodeView: React.FC<NodeViewProps> = ({ node, selected }) => {
 
 // Register as a custom Tiptap Node
 export const TableExtension = Node.create({
-  name: 'novawriterTable',
+  name: 'supermdTable',
   group: 'block',
   atom: true,
 
@@ -185,7 +185,7 @@ export const TableExtension = Node.create({
   parseHTML() {
     return [
       {
-        tag: 'table[data-type="novawriter-table"]',
+        tag: 'table[data-type="supermd-table"]',
       },
     ]
   },
@@ -204,7 +204,7 @@ export const TableExtension = Node.create({
     return [
       'table',
       mergeAttributes(HTMLAttributes, {
-        'data-type': 'novawriter-table',
+        'data-type': 'supermd-table',
         'data-cols': JSON.stringify(cols),
         'data-rows': JSON.stringify(rows),
         'data-colwidths': JSON.stringify(colWidths),

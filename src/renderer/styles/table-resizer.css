@@ -21,14 +21,14 @@
   outline-color: #0078d4;
 }
 
-.novawriter-table {
+.supermd-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 11pt;
   line-height: 1.4;
 }
 
-.novawriter-table td {
+.supermd-table td {
   border: 1px solid #d2d0ce;
   padding: 8px 10px;
   min-width: 60px;
@@ -37,7 +37,7 @@
   color: var(--text-color, #323130);
 }
 
-.dark-mode .novawriter-table td {
+.dark-mode .supermd-table td {
   border-color: #3c3c3c;
 }
 

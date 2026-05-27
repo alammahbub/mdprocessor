@@ -37,13 +37,61 @@ export const SynchronizedCaret = Extension.create({
             const isFocused = editor.isFocused
             if (!isFocused && state.selection.empty) {
               const span = document.createElement('span')
-              span.className = 'novawriter-synchronized-caret'
+              span.className = 'supermd-synchronized-caret'
               return DecorationSet.create(state.doc, [
                 Decoration.widget(state.selection.from, span)
               ])
             }
             return DecorationSet.empty
           }
+        }
+      })
+    ]
+  }
+})
+
+// Custom Tiptap extension to automatically convert standard codeBlock nodes of language 'mermaid' into visual mermaidCode nodes
+export const MermaidAutoConverter = Extension.create({
+  name: 'mermaidAutoConverter',
+  addProseMirrorPlugins() {
+    return [
+      new Plugin({
+        key: new PluginKey('mermaidAutoConverter'),
+        appendTransaction(transactions, _oldState, newState) {
+          // If no doc changes occurred, skip
+          if (!transactions.some(tr => tr.docChanged)) return null
+
+          let tr = newState.tr
+          let modified = false
+
+          newState.doc.descendants((node, pos) => {
+            if (node.type.name === 'codeBlock' && node.attrs.language === 'mermaid') {
+              const mermaidCodeType = newState.schema.nodes.mermaidCode
+              if (mermaidCodeType) {
+                const codeText = node.textContent || ''
+
+                // Try to extract theme from inline init directive if present, e.g. %%{init: {'theme': 'neutral'}}%%
+                let theme = 'neutral'
+                const directiveMatch = codeText.match(/^%%\s*\{\s*init\s*:\s*\{[\s\S]*?'theme'\s*:\s*'([^']+)'[\s\S]*?\}\s*\}\s*%%/i)
+                if (directiveMatch) {
+                  theme = directiveMatch[1]
+                }
+
+                const newNode = mermaidCodeType.create({
+                  code: codeText,
+                  theme: theme,
+                  width: 600,
+                })
+
+                // Using mapping to find the new position since previous replacements shift positions
+                const mappedPos = tr.mapping.map(pos)
+                tr.replaceWith(mappedPos, mappedPos + node.nodeSize, newNode)
+                modified = true
+              }
+            }
+          })
+
+          return modified ? tr : null
         }
       })
     ]
@@ -104,7 +152,7 @@ export const CustomTextStyle = TextStyle.extend({
     if (attrs.color) styles.push(`color: ${attrs.color}`)
     if (attrs.fontSize) styles.push(`font-size: ${attrs.fontSize}pt`)
     if (attrs.fontFamily) styles.push(`font-family: ${attrs.fontFamily}`)
-    
+
     if (styles.length > 0) {
       return `<span style="${styles.join('; ')}">${content}</span>`
     }
@@ -155,7 +203,7 @@ export const CustomHeading = Heading.extend({
       id: {
         default: null,
         parseHTML: (element: HTMLElement) => {
-          return element.getAttribute('id') || 
+          return element.getAttribute('id') ||
             element.textContent?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || null
         },
         renderHTML: (attributes: Record<string, any>) => {
@@ -194,6 +242,12 @@ export const WordEditor: React.FC<WordEditorProps> = ({
   const isLocalUpdateRef = useRef(false)
   // Track whether the latest selection change came from an external sync update.
   const isExternalSelectionUpdateRef = useRef(false)
+  // Store the latest selection callback to prevent stale closure bugs
+  const onSelectionChangeRef = useRef(onSelectionChange)
+
+  useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange
+  }, [onSelectionChange])
 
   const editor = useEditor({
     extensions: [
@@ -202,7 +256,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
         heading: false,
         codeBlock: {
           HTMLAttributes: {
-            class: 'novawriter-code-block',
+            class: 'supermd-code-block',
           },
         },
       }),
@@ -227,7 +281,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
         autolink: true,
         linkOnPaste: true,
         HTMLAttributes: {
-          class: 'novawriter-link',
+          class: 'supermd-link',
         },
       }),
       Typography,
@@ -238,6 +292,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       MermaidExtension,
       ImageExtension,
       SynchronizedCaret,
+      MermaidAutoConverter,
     ],
     content: value,
     contentType: 'markdown' as any,
@@ -260,13 +315,13 @@ export const WordEditor: React.FC<WordEditorProps> = ({
         isExternalSelectionUpdateRef.current = false
         return
       }
-      if (onSelectionChange) {
-        onSelectionChange(editor.state.selection.anchor, editor.state.selection.head)
+      if (onSelectionChangeRef.current) {
+        onSelectionChangeRef.current(editor.state.selection.anchor, editor.state.selection.head)
       }
     },
     editorProps: {
       attributes: {
-        class: 'novawriter-page-content focus:outline-none',
+        class: 'supermd-page-content focus:outline-none',
       },
       // Sanitize pasted HTML content using DOMPurify
       transformPastedHTML: (html) => {
@@ -337,6 +392,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
 
     isExternalSelectionUpdateRef.current = true
     editor.chain().setTextSelection({ from: safeAnchor, to: safeHead }).scrollIntoView().run()
+    isExternalSelectionUpdateRef.current = false
   }, [selection, editor])
 
   // Get margin class name
@@ -352,12 +408,12 @@ export const WordEditor: React.FC<WordEditorProps> = ({
   }
 
   return (
-    <div className="novawriter-canvas-scroller">
-      <div className="novawriter-canvas">
-        <div className={`novawriter-page ${getMarginClass()}`}>
+    <div className="supermd-canvas-scroller">
+      <div className="supermd-canvas">
+        <div className={`supermd-page ${getMarginClass()}`}>
           {/* Header placeholder */}
-          <div className="novawriter-page-header">
-            <span>NovaWriter Document</span>
+          <div className="supermd-page-header">
+            <span>SuperMD Document</span>
             <span className="page-number-marker">Page 1</span>
           </div>
 
@@ -365,9 +421,9 @@ export const WordEditor: React.FC<WordEditorProps> = ({
           <EditorContent editor={editor} />
 
           {/* Footer placeholder */}
-          <div className="novawriter-page-footer">
+          <div className="supermd-page-footer">
             <span>Saved locally as .md</span>
-            <span>NovaWriter 2026</span>
+            <span>SuperMD 2026</span>
           </div>
         </div>
       </div>

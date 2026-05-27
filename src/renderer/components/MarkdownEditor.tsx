@@ -27,6 +27,12 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   const viewRef = useRef<EditorView | null>(null)
   const isUpdatingRef = useRef<boolean>(false)
   const isExternalSelectionUpdateRef = useRef<boolean>(false)
+  // Store the latest selection callback to prevent stale closure bugs
+  const onSelectionChangeRef = useRef(onSelectionChange)
+
+  useEffect(() => {
+    onSelectionChangeRef.current = onSelectionChange
+  }, [onSelectionChange])
 
   // Initialize CodeMirror 6
   useEffect(() => {
@@ -46,7 +52,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
         }
         if (!isUpdatingRef.current) {
           const mainSelection = update.state.selection.main
-          onSelectionChange?.(mainSelection.anchor, mainSelection.head)
+          onSelectionChangeRef.current?.(mainSelection.anchor, mainSelection.head)
         }
       }
     })
@@ -152,7 +158,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
   return (
     <div 
       ref={containerRef} 
-      className="novawriter-markdown-editor-container"
+      className="supermd-markdown-editor-container"
     />
   )
 }

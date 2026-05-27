@@ -133,6 +133,8 @@ interface RibbonToolbarProps {
   onThemeChange?: (theme: string) => void
   distractionFree?: boolean
   onDistractionFreeChange?: (val: boolean) => void
+  shortcuts?: any
+  onManageShortcuts?: () => void
 }
 
 export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
@@ -179,6 +181,8 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
   onThemeChange,
   distractionFree,
   onDistractionFreeChange,
+  shortcuts,
+  onManageShortcuts,
 }) => {
   const tabs = ['Home', 'Insert', 'Layout', 'References', 'View', 'Settings']
 
@@ -199,6 +203,18 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
   const isRightAlign = activeEditor?.isActive({ textAlign: 'right' }) || false
   const isJustifyAlign = activeEditor?.isActive({ textAlign: 'justify' }) || false
 
+  const getShortcutLabel = (actionKey: string) => {
+    if (!shortcuts) return ''
+    const config = shortcuts[actionKey]
+    if (!config) return ''
+    const parts = []
+    if (config.ctrl) parts.push('Ctrl')
+    if (config.alt) parts.push('Alt')
+    if (config.shift) parts.push('Shift')
+    parts.push(config.key.toUpperCase())
+    return ` (${parts.join('+')})`
+  }
+
   return (
     <div className={`ribbon-container ${distractionFree ? 'ribbon-distraction-free' : ''}`}>
       {!distractionFree && (
@@ -207,13 +223,13 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
           <div className="ribbon-title-bar">
             <div className="ribbon-title-left">
               <span className="app-logo">📄</span>
-              <span className="app-title">NovaWriter - {filePath ? filePath.split(/[\\/]/).pop() : 'Untitled.md'}</span>
+              <span className="app-title">SuperMD - {filePath ? filePath.split(/[\\/]/).pop() : 'Untitled.md'}</span>
             </div>
             <div className="ribbon-title-actions">
-              <button className="quick-action-btn" onClick={onNewFile} title="Create New Document (Ctrl+N)">📄 New</button>
-              <button className="quick-action-btn" onClick={onOpenFile} title="Open File (Ctrl+O)">📂 Open</button>
-              <button className="quick-action-btn primary" onClick={onSave} title="Save File (Ctrl+S)">💾 Save</button>
-              <button className="quick-action-btn" onClick={onExportPDF} title="Export to PDF">📥 Export PDF</button>
+              <button className="quick-action-btn" onClick={onNewFile} title={`Create New Document${getShortcutLabel('newFile')}`}>📄 New</button>
+              <button className="quick-action-btn" onClick={onOpenFile} title={`Open File${getShortcutLabel('open')}`}>📂 Open</button>
+              <button className="quick-action-btn primary" onClick={onSave} title={`Save File${getShortcutLabel('save')}`}>💾 Save</button>
+              <button className="quick-action-btn" onClick={onExportPDF} title={`Export to PDF${getShortcutLabel('exportPDF')}`}>📥 Export PDF</button>
               {onExportDOCX && (
                 <button className="quick-action-btn" onClick={onExportDOCX} title="Export to DOCX">📝 Export DOCX</button>
               )}
@@ -269,9 +285,9 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Clipboard</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onCut(); }} title="Cut Selection (Ctrl+X)">Cut</button>
-                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onCopy(); }} title="Copy Selection (Ctrl+C)">Copy</button>
-                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onPaste(); }} title="Paste Clipboard (Ctrl+V)">Paste</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onCut(); }} title={`Cut Selection${getShortcutLabel('cut')}`}>Cut</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onCopy(); }} title={`Copy Selection${getShortcutLabel('copy')}`}>Copy</button>
+                <button className="ribbon-tool-btn text-btn" onMouseDown={(e) => { e.preventDefault(); onPaste(); }} title={`Paste Clipboard${getShortcutLabel('paste')}`}>Paste</button>
               </div>
             </div>
 
@@ -279,8 +295,8 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Undo & Redo</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn" onMouseDown={(e) => { e.preventDefault(); onUndo(); }} title="Undo Last Change (Ctrl+Z)" style={{ fontSize: '16px' }}>↶</button>
-                <button className="ribbon-tool-btn" onMouseDown={(e) => { e.preventDefault(); onRedo(); }} title="Redo Last Change (Ctrl+Y)" style={{ fontSize: '16px' }}>↷</button>
+                <button className="ribbon-tool-btn" onMouseDown={(e) => { e.preventDefault(); onUndo(); }} title={`Undo Last Change${getShortcutLabel('undo')}`} style={{ fontSize: '16px' }}>↶</button>
+                <button className="ribbon-tool-btn" onMouseDown={(e) => { e.preventDefault(); onRedo(); }} title={`Redo Last Change${getShortcutLabel('redo')}`} style={{ fontSize: '16px' }}>↷</button>
               </div>
             </div>
 
@@ -331,10 +347,10 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
               </div>
 
               <div className="ribbon-group-row">
-                <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onMouseDown={(e) => { console.log('[RibbonToolbar] Bold onMouseDown'); e.preventDefault(); onBold(); }} title="Bold (Ctrl+B)">B</button>
-                <button className={`ribbon-tool-btn font-italic ${isItalic ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onItalic(); }} title="Italic (Ctrl+I)">I</button>
-                <button className={`ribbon-tool-btn font-underline ${isUnderline ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onUnderline(); }} title="Underline (Ctrl+U)">U</button>
-                <button className={`ribbon-tool-btn font-strike ${isStrike ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onStrike(); }} title="Strikethrough">S</button>
+                <button className={`ribbon-tool-btn font-bold ${isBold ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onBold(); }} title={`Bold${getShortcutLabel('bold')}`}>B</button>
+                <button className={`ribbon-tool-btn font-italic ${isItalic ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onItalic(); }} title={`Italic${getShortcutLabel('italic')}`}>I</button>
+                <button className={`ribbon-tool-btn font-underline ${isUnderline ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onUnderline(); }} title={`Underline${getShortcutLabel('underline')}`}>U</button>
+                <button className={`ribbon-tool-btn font-strike ${isStrike ? 'active' : ''}`} onMouseDown={(e) => { e.preventDefault(); onStrike(); }} title={`Strikethrough${getShortcutLabel('strike')}`}>S</button>
                 
                 <span className="ribbon-tool-divider"></span>
 
@@ -420,7 +436,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Tables</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertTable(); }} title="Insert Table Grid">
+                <button className="insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertTable(); }} title={`Insert Table Grid${getShortcutLabel('insertTable')}`}>
                   <span className="btn-icon">📅</span>
                   <span className="btn-text">Insert Table</span>
                 </button>
@@ -430,7 +446,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Lists</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertTaskList?.(); }} title="Insert Task List">
+                <button className="insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertTaskList?.(); }} title={`Insert Task List${getShortcutLabel('insertTaskList')}`}>
                   <span className="btn-icon">☑</span>
                   <span className="btn-text">Task List</span>
                 </button>
@@ -440,7 +456,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Links</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertLink?.(); }} title="Insert Link">
+                <button className="insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertLink?.(); }} title={`Insert Link${getShortcutLabel('insertLink')}`}>
                   <span className="btn-icon">🔗</span>
                   <span className="btn-text">Insert Link</span>
                 </button>
@@ -450,7 +466,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Math</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertMath?.(); }} title="Insert Math Formula">
+                <button className="insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertMath?.(); }} title={`Insert Math Formula${getShortcutLabel('insertMath')}`}>
                   <span className="btn-icon">∑</span>
                   <span className="btn-text">Math Formula</span>
                 </button>
@@ -460,7 +476,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group">
               <div className="ribbon-group-title">Illustrations & Charts</div>
               <div className="ribbon-group-row">
-                <button className="ribbon-tool-btn insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertMermaid(); }} title="Insert Mermaid Graph Diagram">
+                <button className="insert-block-btn" onMouseDown={(e) => { e.preventDefault(); onInsertMermaid(); }} title={`Insert Mermaid Graph Diagram${getShortcutLabel('insertMermaid')}`}>
                   <span className="btn-icon">📊</span>
                   <span className="btn-text">Mermaid Diagram</span>
                 </button>
@@ -503,9 +519,9 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
               <div className="ribbon-group-title">Table of Contents</div>
               <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
                 <button 
-                  className="ribbon-tool-btn insert-block-btn" 
+                  className="insert-block-btn" 
                   onMouseDown={(e) => { e.preventDefault(); onInsertTOC?.(); }} 
-                  title="Insert Table of Contents"
+                  title={`Insert Table of Contents${getShortcutLabel('insertTOC')}`}
                 >
                   <span className="btn-icon">📑</span>
                   <span className="btn-text">Insert Table of Contents</span>
@@ -516,7 +532,7 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
             <div className="ribbon-group" style={{ height: 'auto' }}>
               <div className="ribbon-group-title">Export</div>
               <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center', gap: 8 }}>
-                <button className="quick-action-btn" onClick={onExportPDF} title="Export as PDF">📥 Export PDF</button>
+                <button className="quick-action-btn" onClick={onExportPDF} title={`Export as PDF${getShortcutLabel('exportPDF')}`}>📥 Export PDF</button>
                 {onExportDOCX && (
                   <button className="quick-action-btn" onClick={onExportDOCX} title="Export as DOCX">📝 Export DOCX</button>
                 )}
@@ -609,6 +625,19 @@ export const RibbonToolbar: React.FC<RibbonToolbarProps> = ({
                   style={{ borderColor: theme === 'solarized' ? '#859900' : undefined }}
                 >
                   🧪 Solarized
+                </button>
+              </div>
+            </div>
+
+            <div className="ribbon-group" style={{ height: 'auto' }}>
+              <div className="ribbon-group-title">Shortcuts</div>
+              <div className="ribbon-group-row" style={{ height: '100%', alignItems: 'center' }}>
+                <button 
+                  className="quick-action-btn primary" 
+                  onClick={onManageShortcuts} 
+                  title="Configure and Rebind Key combinations"
+                >
+                  ⌨️ Customize Shortcuts
                 </button>
               </div>
             </div>

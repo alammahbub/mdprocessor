@@ -165,7 +165,7 @@ const MERMAID_TEMPLATES = [
     name: 'Mindmap',
     icon: '🧠',
     code: `mindmap
-  root((NovaWriter))
+  root((SuperMD))
     Aesthetic UI
       Glassmorphism
       Harmonious themes
@@ -179,7 +179,7 @@ const MERMAID_TEMPLATES = [
   {
     name: 'Pie Chart',
     icon: '🍰',
-    code: `pie title Key Features of NovaWriter
+    code: `pie title Key Features of SuperMD
   "Word Canvas WYSIWYG" : 45
   "Markdown Live Sync" : 35
   "Mermaid Vector Render" : 15
@@ -193,7 +193,7 @@ const MERMAID_TEMPLATES = [
   1983 : Microsoft Word 1.0 released
   2004 : Markdown syntax created by John Gruber
   2015 : VS Code released by Microsoft
-  2026 : NovaWriter hybrid processor launched`
+  2026 : SuperMD hybrid processor launched`
   },
   {
     name: 'Git Graph',
@@ -211,11 +211,11 @@ const MERMAID_TEMPLATES = [
   }
 ]
 
-export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected }) => {
+export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes, selected, editor, getPos }) => {
   const [svg, setSvg] = useState<string>('')
   const [error, setError] = useState<string>('')
   const [isEditing, setIsEditing] = useState<boolean>(false)
-  const [tempCode, setTempCode] = useState<string>(node.attrs.code)
+  const [tempCode, setTempCode] = useState<string>(node.attrs.code !== undefined ? node.attrs.code : node.textContent || '')
   const [tempTheme, setTempTheme] = useState<string>(node.attrs.theme || 'neutral')
   const [syntaxError, setSyntaxError] = useState<string>('')
   const [isValidating, setIsValidating] = useState<boolean>(false)
@@ -247,6 +247,12 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
       setWidth(node.attrs.width)
     }
   }, [node.attrs.width])
+
+  // Sync state when node attributes or content update externally
+  useEffect(() => {
+    const code = node.attrs.code !== undefined ? node.attrs.code : node.textContent || ''
+    setTempCode(code)
+  }, [node.attrs.code, node.textContent])
 
   // Sync tempTheme state when node attributes update externally
   useEffect(() => {
@@ -281,8 +287,9 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
 
   // Compile when code or theme attributes update
   useEffect(() => {
-    compileDiagram(node.attrs.code, node.attrs.theme || 'neutral')
-  }, [node.attrs.code, node.attrs.theme])
+    const code = node.attrs.code !== undefined ? node.attrs.code : node.textContent || ''
+    compileDiagram(code, node.attrs.theme || 'neutral')
+  }, [node.attrs.code, node.textContent, node.attrs.theme])
 
   // Debounced Syntax Validation inside the Edit Overlay Modal
   useEffect(() => {
@@ -317,12 +324,30 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
     setTempCode(e.target.value)
   }
 
+  const getDiagramCode = () => {
+    return node.attrs.code !== undefined ? node.attrs.code : node.textContent || ''
+  }
+
   const handleApplyChanges = () => {
     const updatedCode = updateStyleDefinitions(tempCode, tempTheme)
-    updateAttributes({ 
-      code: updatedCode,
-      theme: tempTheme
-    })
+    
+    if (node.attrs.code !== undefined) {
+      updateAttributes({ 
+        code: updatedCode,
+        theme: tempTheme
+      })
+    } else {
+      // It is a standard codeBlock node!
+      const { state, dispatch } = editor.view
+      const pos = typeof getPos === 'function' ? (getPos() as number) : 0
+      const start = pos + 1
+      const end = pos + 1 + node.textContent.length
+      
+      const transaction = state.tr.insertText(updatedCode, start, end)
+      dispatch(transaction)
+      updateAttributes({ theme: tempTheme })
+    }
+
     if (typeof (window as any).logActivity === 'function') {
       (window as any).logActivity(
         'Updated Mermaid Diagram',
@@ -335,11 +360,26 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
   }
 
   const handleThemeQuickChange = (newTheme: string) => {
-    const updatedCode = updateStyleDefinitions(node.attrs.code, newTheme)
-    updateAttributes({ 
-      theme: newTheme,
-      code: updatedCode
-    })
+    const currentCode = getDiagramCode()
+    const updatedCode = updateStyleDefinitions(currentCode, newTheme)
+    
+    if (node.attrs.code !== undefined) {
+      updateAttributes({ 
+        theme: newTheme,
+        code: updatedCode
+      })
+    } else {
+      // It is a standard codeBlock node!
+      const { state, dispatch } = editor.view
+      const pos = typeof getPos === 'function' ? (getPos() as number) : 0
+      const start = pos + 1
+      const end = pos + 1 + node.textContent.length
+      
+      const transaction = state.tr.insertText(updatedCode, start, end)
+      dispatch(transaction)
+      updateAttributes({ theme: newTheme })
+    }
+
     setTempTheme(newTheme)
     setTempCode(updatedCode)
     if (typeof (window as any).logActivity === 'function') {
@@ -364,8 +404,22 @@ export const MermaidNodeView: React.FC<NodeViewProps> = ({ node, updateAttribute
 
   const handleInlineEditApply = () => {
     if (!editingNode) return
-    const updatedCode = updateMermaidNodeText(node.attrs.code, editingNode.id, editingNode.text)
-    updateAttributes({ code: updatedCode })
+    const currentCode = getDiagramCode()
+    const updatedCode = updateMermaidNodeText(currentCode, editingNode.id, editingNode.text)
+    
+    if (node.attrs.code !== undefined) {
+      updateAttributes({ code: updatedCode })
+    } else {
+      // It is a standard codeBlock node!
+      const { state, dispatch } = editor.view
+      const pos = typeof getPos === 'function' ? (getPos() as number) : 0
+      const start = pos + 1
+      const end = pos + 1 + node.textContent.length
+      
+      const transaction = state.tr.insertText(updatedCode, start, end)
+      dispatch(transaction)
+    }
+
     setTempCode(updatedCode)
     if (typeof (window as any).logActivity === 'function') {
       (window as any).logActivity(
@@ -670,6 +724,7 @@ export const MermaidExtension = Node.create({
   name: 'mermaidCode',
   group: 'block',
   atom: true,
+  priority: 1000,
 
   addAttributes() {
     return {
@@ -699,6 +754,30 @@ export const MermaidExtension = Node.create({
           }
         }
       },
+      {
+        tag: 'pre',
+        getAttrs: (dom) => {
+          const element = dom as HTMLElement
+          const codeEl = element.querySelector('code')
+          if (codeEl && codeEl.classList.contains('language-mermaid')) {
+            const rawCode = codeEl.textContent || ''
+            
+            // Try to extract theme from inline Mermaid init directive if present, e.g. %%{init: {'theme': 'neutral'}}%%
+            let theme = 'neutral'
+            const directiveMatch = rawCode.match(/^%%\s*\{\s*init\s*:\s*\{[\s\S]*?'theme'\s*:\s*'([^']+)'[\s\S]*?\}\s*\}\s*%%/i)
+            if (directiveMatch) {
+              theme = directiveMatch[1]
+            }
+            
+            return {
+              code: rawCode,
+              width: 600,
+              theme: theme,
+            }
+          }
+          return false
+        }
+      }
     ]
   },
 
@@ -708,16 +787,15 @@ export const MermaidExtension = Node.create({
       'data-code': HTMLAttributes.code,
       'data-width': String(HTMLAttributes.width || 600),
       'data-theme': HTMLAttributes.theme || 'neutral',
-    }), 0]
+    })]
   },
 
-  // Serialize the mermaid node back to its HTML div form when saving as markdown
+  // Serialize the mermaid node to its standard Markdown code block syntax
   renderMarkdown: (node: any) => {
     const code = node.attrs?.code || ''
-    const escaped = code.replace(/"/g, '&quot;')
-    const width = node.attrs?.width || 600
-    const theme = node.attrs?.theme || 'neutral'
-    return `<div data-type="mermaid" data-code="${escaped}" data-width="${width}" data-theme="${theme}"></div>\n`
+    // Ensure the code always ends with a newline to render cleanly inside fenced block
+    const cleanCode = code.endsWith('\n') ? code : code + '\n'
+    return `\`\`\`mermaid\n${cleanCode}\`\`\`\n\n`
   },
 
   addNodeView() {

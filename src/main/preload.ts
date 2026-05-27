@@ -10,8 +10,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.invoke('file:check-recovery', payload),
   clearRecovery: (payload: { fileName: string | null }) => 
     ipcRenderer.invoke('file:clear-recovery', payload),
-  exportPDF: (payload: { htmlContent: string }) => 
+  exportPDF: (payload: { htmlContent: string; filePath?: string | null }) => 
     ipcRenderer.invoke('file:export-pdf', payload),
+  exportDOCX: (payload: { htmlContent: string; filePath?: string | null }) => 
+    ipcRenderer.invoke('file:export-docx', payload),
   onSpellingSuggestions: (callback: (data: { suggestions: string[]; misspelledWord: string; x: number; y: number }) => void) => {
     const handler = (_event: any, data: any) => callback(data)
     ipcRenderer.on('show-spelling-suggestions', handler)

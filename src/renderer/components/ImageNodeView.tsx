@@ -100,7 +100,7 @@ export const ImageNodeView: React.FC<NodeViewProps> = ({ node, updateAttributes,
 
 // Register as a custom Tiptap Node
 export const ImageExtension = Node.create({
-  name: 'novawriterImage',
+  name: 'supermdImage',
   group: 'block',
   atom: true,
   draggable: true,
@@ -141,7 +141,7 @@ export const ImageExtension = Node.create({
     return [
       'img',
       mergeAttributes(HTMLAttributes, {
-        'data-type': 'novawriter-image',
+        'data-type': 'supermd-image',
         width: String(width),
       }),
     ]

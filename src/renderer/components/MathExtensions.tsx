@@ -119,7 +119,7 @@ export const MathInlineExtension = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ['span', mergeAttributes(HTMLAttributes, { 'data-math-inline': HTMLAttributes.latex }), 0]
+    return ['span', mergeAttributes(HTMLAttributes, { 'data-math-inline': HTMLAttributes.latex })]
   },
 
   renderMarkdown: (node: any) => {

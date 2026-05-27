@@ -1,4 +1,4 @@
-.novawriter-app-container {
+.supermd-app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -10,13 +10,13 @@
   transition: background-color 0.25s, color 0.25s;
 }
 
-.novawriter-app-container.dark-mode {
+.supermd-app-container.dark-mode {
   background-color: #1e1e1e;
   color: #cccccc;
 }
 
 /* Workspace Panels */
-.novawriter-workspace {
+.supermd-workspace {
   flex: 1;
   display: flex;
   width: 100%;
@@ -69,7 +69,7 @@ body.solarized-mode .markdown-settings-row {
 }
 
 /* Status Bar */
-.novawriter-status-bar {
+.supermd-status-bar {
   height: 24px;
   background-color: var(--status-bar-bg, #2b579a);
   color: #ffffff;
@@ -92,11 +92,11 @@ body.solarized-mode .markdown-settings-row {
 }
 
 /* Distraction-free mode */
-.novawriter-app-container.distraction-free .novawriter-status-bar {
+.supermd-app-container.distraction-free .supermd-status-bar {
   display: none;
 }
 
-.novawriter-app-container.distraction-free .novawriter-workspace {
+.supermd-app-container.distraction-free .supermd-workspace {
   height: 100%;
 }
 
@@ -126,7 +126,7 @@ body.solarized-mode .markdown-settings-row {
 }
 
 /* Toast Notifications */
-.novawriter-toast {
+.supermd-toast {
   position: fixed;
   bottom: 40px;
   left: 50%;
@@ -143,7 +143,7 @@ body.solarized-mode .markdown-settings-row {
   animation: slideUpFade 0.3s ease-out;
 }
 
-.dark-mode .novawriter-toast {
+.dark-mode .supermd-toast {
   background: rgba(0, 120, 212, 0.9);
 }
 
@@ -174,7 +174,7 @@ body.solarized-mode .markdown-settings-row {
 }
 
 /* Default Markdown Editor Container */
-.novawriter-markdown-editor-container {
+.supermd-markdown-editor-container {
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -210,7 +210,7 @@ body.solarized-mode .markdown-settings-row {
 }
 
 /* Centered A4-width Code Sheet */
-.view-mode-markdown .novawriter-markdown-editor-container {
+.view-mode-markdown .supermd-markdown-editor-container {
   width: 210mm;
   max-width: 100%;
   flex: 1;
@@ -228,14 +228,14 @@ body.solarized-mode .markdown-settings-row {
 }
 
 /* Ensure CodeMirror editor internal elements stretch and fit the card */
-.view-mode-markdown .novawriter-markdown-editor-container .cm-editor {
+.view-mode-markdown .supermd-markdown-editor-container .cm-editor {
   flex: 1;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.view-mode-markdown .novawriter-markdown-editor-container .cm-scroller {
+.view-mode-markdown .supermd-markdown-editor-container .cm-scroller {
   flex: 1;
 }
 
@@ -253,7 +253,7 @@ body.solarized-mode .markdown-settings-row {
 /* ==========================================================================
    Interactive Diagnostics Debug Panel
    ========================================================================== */
-.novawriter-diagnostics {
+.supermd-diagnostics {
   position: fixed;
   bottom: 40px;
   right: 20px;
@@ -270,7 +270,7 @@ body.solarized-mode .markdown-settings-row {
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.novawriter-diagnostics.collapsed {
+.supermd-diagnostics.collapsed {
   width: 130px;
   height: 32px;
   cursor: pointer;
@@ -283,12 +283,12 @@ body.solarized-mode .markdown-settings-row {
   font-weight: bold;
 }
 
-.novawriter-diagnostics.collapsed:hover {
+.supermd-diagnostics.collapsed:hover {
   background: rgba(43, 87, 154, 1);
   transform: translateY(-2px);
 }
 
-.novawriter-diagnostics-expanded {
+.supermd-diagnostics-expanded {
   width: 450px;
   max-height: 400px;
   display: flex;
@@ -654,7 +654,7 @@ body.solarized-mode .markdown-settings-row {
    ========================================================================== */
 
 /* Word Mode (WYSIWYG Tiptap) Custom synchronized caret when blurred */
-.novawriter-synchronized-caret {
+.supermd-synchronized-caret {
   display: inline-block !important;
   width: 2px !important;
   height: 1.25em !important;
@@ -664,22 +664,22 @@ body.solarized-mode .markdown-settings-row {
   vertical-align: text-bottom !important;
   position: relative !important;
   z-index: 10 !important;
-  animation: novawriter-caret-blink 1.2s infinite steps(2) !important;
+  animation: supermd-caret-blink 1.2s infinite steps(2) !important;
 }
 
-.dark-mode .novawriter-synchronized-caret {
+.dark-mode .supermd-synchronized-caret {
   background-color: #52a2f5 !important;
 }
 
-body.sepia-mode .novawriter-synchronized-caret {
+body.sepia-mode .supermd-synchronized-caret {
   background-color: #7b4f23 !important;
 }
 
-body.solarized-mode .novawriter-synchronized-caret {
+body.solarized-mode .supermd-synchronized-caret {
   background-color: #2aa198 !important;
 }
 
-@keyframes novawriter-caret-blink {
+@keyframes supermd-caret-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
@@ -712,4 +712,367 @@ body.solarized-mode .novawriter-synchronized-caret {
 @keyframes cm-blink {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
+}
+
+/* ==========================================================================
+   Keyboard Shortcut Manager Modal & UI Styling (Glassmorphism & Harmonious)
+   ========================================================================== */
+.supermd-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 20000;
+  animation: fadeInOverlay 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.supermd-modal-content {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  width: 680px;
+  max-width: 90%;
+  max-height: 85vh;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: scaleInModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #323130;
+  font-family: inherit;
+}
+
+.dark-mode .supermd-modal-content {
+  background: rgba(30, 30, 30, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e0e0e0;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.modal-header {
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .modal-header {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #a19f9d;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.modal-close-btn:hover {
+  color: #ff6b6b;
+}
+
+.modal-body {
+  padding: 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.shortcuts-intro {
+  font-size: 12px;
+  color: #605e5c;
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.dark-mode .shortcuts-intro {
+  color: #a19f9d;
+}
+
+.shortcuts-table-container {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.dark-mode .shortcuts-table-container {
+  border-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(0, 0, 0, 0.2);
+}
+
+.shortcuts-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  text-align: left;
+}
+
+.shortcuts-table th {
+  padding: 10px 14px;
+  font-weight: 600;
+  background-color: rgba(0, 0, 0, 0.03);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dark-mode .shortcuts-table th {
+  background-color: rgba(255, 255, 255, 0.03);
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+
+.shortcuts-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  vertical-align: middle;
+}
+
+.dark-mode .shortcuts-table td {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+.shortcuts-table tr:last-child td {
+  border-bottom: none;
+}
+
+.shortcut-action-name {
+  font-weight: 600;
+  color: var(--primary-accent, #2b579a);
+}
+
+.dark-mode .shortcut-action-name {
+  color: #71bbf5;
+}
+
+.shortcut-desc {
+  font-size: 11px;
+  color: #605e5c;
+  margin-top: 2px;
+}
+
+.dark-mode .shortcut-desc {
+  color: #a19f9d;
+}
+
+.key-badge-container {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.key-badge {
+  background-color: #faf9f8;
+  border: 1px solid #d2d0ce;
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: Consolas, monospace;
+  box-shadow: 0 1px 1px rgba(0,0,0,0.05);
+}
+
+.dark-mode .key-badge {
+  background-color: #2d2d2d;
+  border-color: #555555;
+  color: #e0e0e0;
+}
+
+.shortcut-action-btn {
+  background: none;
+  border: 1px solid var(--primary-accent, #2b579a);
+  color: var(--primary-accent, #2b579a);
+  border-radius: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.dark-mode .shortcut-action-btn {
+  border-color: #71bbf5;
+  color: #71bbf5;
+}
+
+.shortcut-action-btn:hover {
+  background-color: var(--primary-accent, #2b579a);
+  color: #ffffff;
+}
+
+.dark-mode .shortcut-action-btn:hover {
+  background-color: #0078d4;
+  color: #ffffff;
+  border-color: #0078d4;
+}
+
+.modal-footer {
+  padding: 12px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.dark-mode .modal-footer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.modal-btn {
+  border: 1px solid #d2d0ce;
+  background-color: #ffffff;
+  color: #323130;
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.dark-mode .modal-btn {
+  border-color: #3c3c3c;
+  background-color: #2d2d2d;
+  color: #cccccc;
+}
+
+.modal-btn:hover {
+  background-color: #f3f2f1;
+}
+
+.dark-mode .modal-btn:hover {
+  background-color: #333333;
+}
+
+.modal-btn.primary {
+  background-color: #2b579a;
+  border-color: #2b579a;
+  color: #ffffff;
+}
+
+.dark-mode .modal-btn.primary {
+  background-color: #0078d4;
+  border-color: #0078d4;
+  color: #ffffff;
+}
+
+.modal-btn.primary:hover {
+  background-color: #1b478a;
+  border-color: #1b478a;
+}
+
+/* Rebinding UI Box */
+.rebinding-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.rebinding-panel {
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  color: #323130;
+}
+
+.dark-mode .rebinding-panel {
+  background: #252526;
+  color: #e0e0e0;
+}
+
+.rebinding-panel h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  font-size: 15px;
+}
+
+.rebinding-action-info {
+  font-weight: bold;
+  color: var(--primary-accent, #2b579a);
+}
+
+.dark-mode .rebinding-action-info {
+  color: #71bbf5;
+}
+
+.rebinding-instruction {
+  font-size: 12px;
+  color: #605e5c;
+  margin-bottom: 20px;
+}
+
+.dark-mode .rebinding-instruction {
+  color: #a19f9d;
+}
+
+.detected-keys-box {
+  margin: 16px 0;
+  padding: 12px;
+  background-color: #faf9f8;
+  border: 1px dashed #d2d0ce;
+  border-radius: 6px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dark-mode .detected-keys-box {
+  background-color: #1e1e1e;
+  border-color: #3c3c3c;
+}
+
+.detected-keys-empty {
+  font-style: italic;
+  color: #a19f9d;
+  font-size: 12px;
+}
+
+.rebinding-actions {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+@keyframes fadeInOverlay {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleInModal {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }

@@ -92,7 +92,7 @@ body.solarized-mode {
   --hover-bg: rgba(255,255,255,0.05);
 }
 
-.novawriter-canvas-scroller {
+.supermd-canvas-scroller {
   flex: 1;
   width: 100%;
   height: 100%;
@@ -101,7 +101,7 @@ body.solarized-mode {
   transition: background-color 0.25s ease;
 }
 
-.novawriter-canvas {
+.supermd-canvas {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -110,7 +110,7 @@ body.solarized-mode {
 }
 
 /* Paginated A4 Simulator block styling */
-.novawriter-page {
+.supermd-page {
   background-color: var(--page-bg);
   color: var(--text-color);
   width: 210mm;
@@ -123,7 +123,7 @@ body.solarized-mode {
   transition: background-color 0.25s ease, padding 0.2s ease, box-shadow 0.25s ease;
 }
 
-.dark-mode .novawriter-page {
+.dark-mode .supermd-page {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -141,7 +141,7 @@ body.solarized-mode {
 }
 
 /* Header & Footer elements */
-.novawriter-page-header {
+.supermd-page-header {
   position: absolute;
   top: 8mm;
   left: 20mm;
@@ -156,7 +156,7 @@ body.solarized-mode {
   pointer-events: none;
 }
 
-.novawriter-page-footer {
+.supermd-page-footer {
   position: absolute;
   bottom: 8mm;
   left: 20mm;
@@ -172,7 +172,7 @@ body.solarized-mode {
 }
 
 /* Core Tiptap / ProseMirror Document Styles */
-.novawriter-page-content {
+.supermd-page-content {
   flex: 1;
   width: 100%;
   font-family: 'Segoe UI', Arial, sans-serif;
@@ -182,12 +182,12 @@ body.solarized-mode {
   outline: none;
 }
 
-.novawriter-page-content p {
+.supermd-page-content p {
   margin-top: 0;
   margin-bottom: 8pt;
 }
 
-.novawriter-page-content h1 {
+.supermd-page-content h1 {
   font-size: 22pt;
   color: var(--primary-accent);
   margin-top: 12pt;
@@ -195,7 +195,7 @@ body.solarized-mode {
   font-weight: 600;
 }
 
-.novawriter-page-content h2 {
+.supermd-page-content h2 {
   font-size: 16pt;
   color: var(--primary-accent);
   margin-top: 12pt;
@@ -203,14 +203,14 @@ body.solarized-mode {
   font-weight: 500;
 }
 
-.novawriter-page-content h3 {
+.supermd-page-content h3 {
   font-size: 13pt;
   margin-top: 10pt;
   margin-bottom: 2pt;
   font-weight: 500;
 }
 
-.novawriter-page-content blockquote {
+.supermd-page-content blockquote {
   border-left: 3px solid var(--primary-accent);
   padding-left: 12px;
   margin-left: 0;
@@ -219,14 +219,14 @@ body.solarized-mode {
   color: #605e5c;
 }
 
-.novawriter-page-content ul, 
-.novawriter-page-content ol {
+.supermd-page-content ul, 
+.supermd-page-content ol {
   margin-top: 0;
   margin-bottom: 8pt;
   padding-left: 20px;
 }
 
-.novawriter-page-content code {
+.supermd-page-content code {
   background-color: rgba(0, 0, 0, 0.04);
   padding: 2px 4px;
   border-radius: 4px;
@@ -234,7 +234,7 @@ body.solarized-mode {
   font-size: 90%;
 }
 
-.novawriter-code-block {
+.supermd-code-block {
   background-color: #1e1e1e !important;
   color: #d4d4d4 !important;
   padding: 12px !important;
@@ -246,7 +246,7 @@ body.solarized-mode {
 }
 
 /* Table styling for markdown and custom tables */
-.novawriter-page-content table {
+.supermd-page-content table {
   width: 100%;
   border-collapse: collapse;
   margin: 12px 0;
@@ -256,154 +256,154 @@ body.solarized-mode {
   color: var(--text-color, #323130);
 }
 
-.novawriter-page-content th,
-.novawriter-page-content td {
+.supermd-page-content th,
+.supermd-page-content td {
   border: 1px solid #d2d0ce;
   padding: 8px 10px;
   text-align: left;
   vertical-align: top;
 }
 
-.dark-mode .novawriter-page-content th,
-.dark-mode .novawriter-page-content td {
+.dark-mode .supermd-page-content th,
+.dark-mode .supermd-page-content td {
   border-color: #3c3c3c;
 }
 
-.novawriter-page-content th {
+.supermd-page-content th {
   font-weight: 600;
   background-color: rgba(0, 0, 0, 0.04);
   color: var(--text-color, #323130);
 }
 
-.dark-mode .novawriter-page-content th {
+.dark-mode .supermd-page-content th {
   background-color: rgba(255, 255, 255, 0.06);
 }
 
-.sepia-mode .novawriter-page-content th {
+.sepia-mode .supermd-page-content th {
   background-color: rgba(139, 115, 85, 0.08);
 }
 
-.solarized-mode .novawriter-page-content th {
+.solarized-mode .supermd-page-content th {
   background-color: rgba(131, 148, 150, 0.08);
 }
 
-.sepia-mode .novawriter-page-content th,
-.sepia-mode .novawriter-page-content td {
+.sepia-mode .supermd-page-content th,
+.sepia-mode .supermd-page-content td {
   border-color: #d4c5a9;
 }
 
-.solarized-mode .novawriter-page-content th,
-.solarized-mode .novawriter-page-content td {
+.solarized-mode .supermd-page-content th,
+.solarized-mode .supermd-page-content td {
   border-color: #094452;
 }
 
-.novawriter-page-content tr:first-child th {
+.supermd-page-content tr:first-child th {
   border-bottom-width: 2px;
 }
 
-.novawriter-page-content tr:nth-child(even) td {
+.supermd-page-content tr:nth-child(even) td {
   background-color: rgba(0, 0, 0, 0.015);
 }
 
-.dark-mode .novawriter-page-content tr:nth-child(even) td,
-.solarized-mode .novawriter-page-content tr:nth-child(even) td {
+.dark-mode .supermd-page-content tr:nth-child(even) td,
+.solarized-mode .supermd-page-content tr:nth-child(even) td {
   background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* Task List styling */
-.novawriter-page-content ul[data-type="taskList"] {
+.supermd-page-content ul[data-type="taskList"] {
   list-style: none;
   padding-left: 0;
 }
 
-.novawriter-page-content ul[data-type="taskList"] li {
+.supermd-page-content ul[data-type="taskList"] li {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   margin-bottom: 4px;
 }
 
-.novawriter-page-content ul[data-type="taskList"] li > label {
+.supermd-page-content ul[data-type="taskList"] li > label {
   flex-shrink: 0;
   margin-top: 3px;
 }
 
-.novawriter-page-content ul[data-type="taskList"] li > label input[type="checkbox"] {
+.supermd-page-content ul[data-type="taskList"] li > label input[type="checkbox"] {
   width: 16px;
   height: 16px;
   cursor: pointer;
   accent-color: var(--primary-accent, #2b579a);
 }
 
-.novawriter-page-content ul[data-type="taskList"] li[data-checked="true"] > div p {
+.supermd-page-content ul[data-type="taskList"] li[data-checked="true"] > div p {
   text-decoration: line-through;
   opacity: 0.6;
 }
 
 /* Link styling */
-.novawriter-link {
+.supermd-link {
   color: var(--primary-accent, #2b579a);
   text-decoration: underline;
   cursor: pointer;
 }
 
-.novawriter-link:hover {
+.supermd-link:hover {
   text-decoration: underline;
   opacity: 0.85;
 }
 
 /* Definition list styling */
-.novawriter-page-content dl {
+.supermd-page-content dl {
   margin: 12px 0;
   padding: 0;
 }
 
-.novawriter-page-content dt {
+.supermd-page-content dt {
   font-weight: 600;
   margin-top: 8px;
   color: var(--primary-accent, #2b579a);
 }
 
-.novawriter-page-content dd {
+.supermd-page-content dd {
   margin-left: 16px;
   margin-bottom: 8px;
   color: var(--text-color, #323130);
 }
 
 /* Highlight / Mark styling for ==text== */
-.novawriter-page-content mark {
+.supermd-page-content mark {
   background-color: #ffff00;
   padding: 0 2px;
   border-radius: 2px;
 }
 
-.dark-mode .novawriter-page-content mark {
+.dark-mode .supermd-page-content mark {
   background-color: #7a6200;
   color: #e0e0e0;
 }
 
-.sepia-mode .novawriter-page-content mark {
+.sepia-mode .supermd-page-content mark {
   background-color: #e8d5a3;
 }
 
-.solarized-mode .novawriter-page-content mark {
+.solarized-mode .supermd-page-content mark {
   background-color: #657b00;
   color: #e0e0e0;
 }
 
 /* Footnote styling */
-.novawriter-page-content sup[id^="fnref-"] a {
+.supermd-page-content sup[id^="fnref-"] a {
   color: var(--primary-accent, #2b579a);
   text-decoration: none;
   font-size: 0.8em;
 }
 
-.novawriter-page-content li[id^="fn-"] {
+.supermd-page-content li[id^="fn-"] {
   font-size: 0.85em;
   color: var(--header-footer-color, #a19f9d);
 }
 
-.novawriter-page-content li[id^="fn-"] a {
+.supermd-page-content li[id^="fn-"] a {
   color: var(--primary-accent, #2b579a);
 }
 
@@ -567,7 +567,7 @@ body.solarized-mode {
 }
 
 /* <ins> tag styling */
-.novawriter-page-content ins {
+.supermd-page-content ins {
   text-decoration: none;
   background-color: rgba(0, 128, 0, 0.08);
   padding: 0 2px;
@@ -575,7 +575,7 @@ body.solarized-mode {
 }
 
 /* Custom horizontal line rule */
-.novawriter-page-content hr {
+.supermd-page-content hr {
   border: none;
   border-top: 1px solid rgba(0, 0, 0, 0.15);
   margin: 15pt 0;

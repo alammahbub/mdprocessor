@@ -1,73 +1,92 @@
-# React + TypeScript + Vite
+# 📄 SuperMD: A High-Fidelity Hybrid Markdown Word Processor
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+SuperMD is a premium, enterprise-grade desktop word processor built with Electron, React, and TypeScript. It bridges the gap between structured Markdown speed and the advanced, paginated visual fidelity of professional word processors like Microsoft Word.
 
-Currently, two official plugins are available:
+SuperMD establishes **Markdown (`.md`) as the single source of truth** while offering two fully synchronized, real-time interfaces:
+1.  **Word Mode (WYSIWYG Layout):** A rich, paginated, physical page emulator (A4) featuring a responsive MS Word-style **Ribbon Interface**, custom margins, and direct drag-and-resize media elements.
+2.  **Markdown Mode (IDE Editor):** A developer-grade code editor built on **CodeMirror 6** with syntax highlighting, line numbers, folding, invisible characters, and structural sync.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## ✨ Outstanding Core Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 🔄 Bidirectional AST Sync Engine
+*   **Zero-Cursor Jump:** Direct ProseMirror AST to CodeMirror 6 transaction mapping ensures seamless edits in either pane without resetting selection ranges or scroll positions.
+*   **Synchronized Caret:** Renders a custom blinking caret visible in the blurred editor frame for fluid visual continuity.
 
-## Expanding the ESLint configuration
+### 🎀 MS Word-Style Ribbon & Tab Toolbar
+*   **Home Tab:** Controls for Font Family, Size, Bold (`**`), Italic (`*`), Underline (`<u>`), Strikethrough (`~~`), Subscript/Superscript (`<sub>`/`<sup>`), Text Highlight Color (`<mark>`), text alignments (Left/Center/Right), line spacing, and markdown style headers.
+*   **Insert Tab:** Interactive visual grid selectors for HTML/GFM tables, image imports (local or drag-and-drop), inline/block LaTeX formulas, bookmarks, and Mermaid.js diagrams.
+*   **Layout Tab:** Instantly configures physical page setup (Normal, Narrow, Wide margins).
+*   **View Tab:** Fast switches between Word Mode Only, Markdown Mode Only, Split View, and a distraction-free Fullscreen canvas.
+*   **Settings (Shortcut Manager):** Allows users to rebind hotkey shortcuts (e.g. Bold, Italic, Save, Redo) inside an interactive keyboard capture modal.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### 📊 Offline Mermaid & LaTeX Compilers
+*   **Mermaid Node Views:** Converts language-tagged ` ```mermaid ` code blocks into vector SVGs asynchronously in the background. Features double-click glassmorphic edit overlays with live syntax check indicators and diagram template builders (Flowcharts, Class diagrams, pie charts, etc.).
+*   **KaTeX Math Engine:** Centered block (`$$...$$`) and inline (`$...$`) math formulas rendered on the page, with double-click editors.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### 📥 High-Fidelity Exports & Printing
+*   **Professional PDF Export:** Electron main-process handler print options tailored to A4 sheets with `@media print` layout overrides, proper header/footer spacing, and a 1.5s rendering delay for asynchronous content.
+*   **MSO-Compliant DOCX Export:** IPC wrapper transforming rich HTML into an Office Open XML compliant format inside an MHTML envelope, supporting standard Calibri spacing and print layout definitions for MS Word.
+*   **Web Fallback Printing:** Elegant browser compatibility printing utilizing temporary offscreen print iframes if run outside of Electron.
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+---
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## 🏗️ Technical Architecture
+
+SuperMD leverages a fully decoupled, sandbox-isolated process architecture:
+
+```
+                  ┌────────────────────────────────────────┐
+                  │          Electron Main Process         │
+                  │   - App Lifecycle   - File OS I/O      │
+                  │   - OS Native Menus - PDF/DOCX Write   │
+                  └───────────────────▲────────────────────┘
+                                      │
+                         IPC Bridge (Context Bridge)
+                                      │
+                  ┌───────────────────▼────────────────────┐
+                  │         Renderer Window UI (Vite)      │
+                  │  - Global State    - Ribbon UI         │
+                  │  - Theme Engine    - Settings Manager  │
+                  │  ┌──────────────────────────────────┐  │
+                  │  │     Dual-Canvas Sync Engine      │  │
+                  │  │ ┌──────────────┐ ┌─────────────┐ │  │
+                  │  │ │  Word Mode   │ │Markdown Mode│ │  │
+                  │  │ │ (ProseMirror)│ │(CodeMirror6)│ │  │
+                  │  │ └──────────────┘ └─────────────┘ │  │
+                  │  └──────────────────────────────────┘  │
+                  └────────────────────────────────────────┘
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## 🛡️ Stability & Resilience Specs
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+### 1. Stale Editor View Guard
+In Tiptap v3, calling `.view.focused` or accessing `.state` during React component unmount/remount (which occurs on file transitions) throws an unhandled runtime error. SuperMD implements robust `try-catch` blocks and `!editorInstance.isDestroyed` safeguards globally to prevent UI shell crashes.
+
+### 2. ProseMirror Atom Node Spec Fixes
+ProseMirror constraints dictate that leaf nodes (`atom: true`) must not contain content holes (`0`) in their `renderHTML` schema configurations. SuperMD corrects `MathInlineExtension` and `MermaidExtension` schemas to remove standard content holes, guaranteeing error-free document compilation and native exports.
+
+---
+
+## 🚀 Running and Building
+
+### Prerequisites
+*   **Node.js** (v18+)
+*   **Yarn** (Preferred)
+
+### Setup & Dev Run
+1.  **Install dependencies**:
+    ```bash
+    yarn install
+    ```
+2.  **Start the Electron development server**:
+    ```bash
+    yarn dev
+    ```
+3.  **Compile & check types**:
+    ```bash
+    yarn tsc -b
+    ```
