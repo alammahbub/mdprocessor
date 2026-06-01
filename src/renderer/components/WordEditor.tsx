@@ -19,6 +19,7 @@ import Typography from '@tiptap/extension-typography'
 import { MermaidExtension } from './MermaidNodeView'
 import { ImageExtension } from './ImageNodeView'
 import { MathInlineExtension, MathBlockExtension } from './MathExtensions'
+import { TableExtension } from './TableNodeView'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 import '../styles/a4-emulator.css'
@@ -291,6 +292,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       MathBlockExtension,
       MermaidExtension,
       ImageExtension,
+      TableExtension,
       SynchronizedCaret,
       MermaidAutoConverter,
     ],
