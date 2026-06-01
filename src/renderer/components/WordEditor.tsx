@@ -230,6 +230,59 @@ export const CustomTable = TableExtension.extend({
   }
 } as any)
 
+// Utility to pre-process GFM pipe tables in markdown into custom table HTML blocks before parsing in Tiptap
+const convertGfmTablesToHtml = (markdown: string): string => {
+  if (!markdown) return ''
+  const lines = markdown.split(/\r?\n/)
+  const result: string[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i].trim()
+    // Check if line looks like a GFM table header row
+    if (line.startsWith('|') && line.endsWith('|') && line.includes('|', 1) && i + 1 < lines.length) {
+      const nextLine = lines[i + 1].trim()
+      // Check if next line is a GFM table separator row
+      const isSeparator = nextLine.startsWith('|') && nextLine.endsWith('|') && /^[|:\-\s]+$/.test(nextLine)
+      
+      if (isSeparator) {
+        // Parse columns from the header row
+        const cols = line.split('|').slice(1, -1).map(c => c.trim())
+        const rows: string[][] = []
+        
+        i += 2 // Skip header and separator
+        
+        // Parse all subsequent rows
+        while (i < lines.length) {
+          const rowLine = lines[i].trim()
+          if (rowLine.startsWith('|') && rowLine.endsWith('|')) {
+            const cells = rowLine.split('|').slice(1, -1).map(c => c.trim())
+            rows.push(cells)
+            i++
+          } else {
+            break
+          }
+        }
+        
+        // Generate custom HTML table representation
+        const colWidths = Array(cols.length).fill('auto')
+        const escapedCols = JSON.stringify(cols).replace(/"/g, '&quot;')
+        const escapedRows = JSON.stringify(rows).replace(/"/g, '&quot;')
+        const escapedColWidths = JSON.stringify(colWidths).replace(/"/g, '&quot;')
+        
+        const htmlTable = `<table data-type="supermd-table" data-cols="${escapedCols}" data-rows="${escapedRows}" data-colwidths="${escapedColWidths}" style="width: 100%; border-collapse: collapse;"></table>`
+        result.push(htmlTable)
+        continue
+      }
+    }
+    
+    result.push(lines[i])
+    i++
+  }
+  
+  return result.join('\n')
+}
+
 // Markdown utilities to normalize formatting differences (CRLF vs LF) and prevent cursor reset loops
 const normalizeMarkdown = (str: string) => {
   return str.replace(/\r\n/g, '\n').replace(/\s+/g, ' ').trim()
@@ -310,7 +363,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       SynchronizedCaret,
       MermaidAutoConverter,
     ],
-    content: value,
+    content: convertGfmTablesToHtml(value),
     contentType: 'markdown' as any,
     onCreate: ({ editor }) => {
       if (onEditorReady) {
@@ -386,7 +439,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
           editor.commands.clearContent(false)
           return
         }
-        editor.commands.setContent(value, { emitUpdate: false, contentType: 'markdown' } as any)
+        editor.commands.setContent(convertGfmTablesToHtml(value), { emitUpdate: false, contentType: 'markdown' } as any)
       }
     } catch {
       // Empty editor or serialization error — safe to ignore
