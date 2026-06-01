@@ -216,6 +216,20 @@ export const CustomHeading = Heading.extend({
   },
 } as any)
 
+// Custom Table extension to serialize custom supermdTable node as GFM pipe table in markdown
+export const CustomTable = TableExtension.extend({
+  renderMarkdown: (node: any) => {
+    const cols = node.attrs.cols || ['Header 1', 'Header 2']
+    const rows = node.attrs.rows || [['Cell A', 'Cell B']]
+
+    const headerLine = '| ' + cols.join(' | ') + ' |'
+    const separatorLine = '| ' + cols.map(() => '---').join(' | ') + ' |'
+    const bodyLines = rows.map((row: string[]) => '| ' + row.join(' | ') + ' |').join('\n')
+
+    return `${headerLine}\n${separatorLine}\n${bodyLines}\n\n`
+  }
+} as any)
+
 // Markdown utilities to normalize formatting differences (CRLF vs LF) and prevent cursor reset loops
 const normalizeMarkdown = (str: string) => {
   return str.replace(/\r\n/g, '\n').replace(/\s+/g, ' ').trim()
@@ -292,7 +306,7 @@ export const WordEditor: React.FC<WordEditorProps> = ({
       MathBlockExtension,
       MermaidExtension,
       ImageExtension,
-      TableExtension,
+      CustomTable,
       SynchronizedCaret,
       MermaidAutoConverter,
     ],

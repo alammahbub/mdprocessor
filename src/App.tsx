@@ -56,7 +56,11 @@ graph TD
 
 ## Tables Support
 
-<table data-type="supermd-table" data-cols="[&quot;Processor Feature&quot;,&quot;Word WYSIWYG Mode&quot;,&quot;Markdown Editor Mode&quot;]" data-rows="[[&quot;Mermaid Graph Compiler&quot;,&quot;✅ Vector SVG Chart renders visually&quot;,&quot;💻 Raw structural node graphs&quot;],[&quot;Interactive Sizing Columns&quot;,&quot;✅ Click and drag cell boundaries&quot;,&quot;🛠️ Automated data attribute sync&quot;],[&quot;Dynamic Sync Verification&quot;,&quot;✅ High-contrast parity logs&quot;,&quot;🔄 Automatic AST synchronization&quot;]]" data-colwidths="[&quot;auto&quot;,&quot;auto&quot;,&quot;auto&quot;]" style="width: 100%; border-collapse: collapse;"></table>
+| Processor Feature | Word WYSIWYG Mode | Markdown Editor Mode |
+|---|---|---|
+| Mermaid Graph Compiler | ✅ Vector SVG Chart renders visually | 💻 Raw structural node graphs |
+| Interactive Sizing Columns | ✅ Click and drag cell boundaries | 🛠️ Automated data attribute sync |
+| Dynamic Sync Verification | ✅ High-contrast parity logs | 🔄 Automatic AST synchronization |
 
 ## Task Lists
 

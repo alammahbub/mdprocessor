@@ -147,6 +147,12 @@ export const TableExtension = Node.create({
           if (val) {
             try { return JSON.parse(val) } catch { return ['Header 1', 'Header 2'] }
           }
+          // Parse columns from standard table headers (th)
+          const headers = Array.from(element.querySelectorAll('th')).map(th => th.textContent?.trim() || '')
+          if (headers.length > 0) return headers
+          // Fallback: look for td of the first tr
+          const firstRowCells = Array.from(element.querySelectorAll('tr:first-child td')).map(td => td.textContent?.trim() || '')
+          if (firstRowCells.length > 0) return firstRowCells
           return ['Header 1', 'Header 2']
         },
         renderHTML: (attributes) => {
@@ -160,6 +166,10 @@ export const TableExtension = Node.create({
           if (val) {
             try { return JSON.parse(val) } catch { return ['auto', 'auto'] }
           }
+          const headersCount = element.querySelectorAll('th').length
+          if (headersCount > 0) return Array(headersCount).fill('auto')
+          const firstRowCellsCount = element.querySelectorAll('tr:first-child td').length
+          if (firstRowCellsCount > 0) return Array(firstRowCellsCount).fill('auto')
           return ['auto', 'auto']
         },
         renderHTML: (attributes) => {
@@ -173,6 +183,20 @@ export const TableExtension = Node.create({
           if (val) {
             try { return JSON.parse(val) } catch { return [['Cell A', 'Cell B']] }
           }
+          // Parse rows from standard table rows (tbody tr or just tr)
+          const rowsList: string[][] = []
+          const trs = Array.from(element.querySelectorAll('tr'))
+          const hasHeaders = element.querySelectorAll('th').length > 0
+          
+          trs.forEach((tr, index) => {
+            if (hasHeaders && index === 0) return // Skip header row
+            const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent?.trim() || '')
+            if (cells.length > 0) {
+              rowsList.push(cells)
+            }
+          })
+          
+          if (rowsList.length > 0) return rowsList
           return [['Cell A', 'Cell B']]
         },
         renderHTML: (attributes) => {
@@ -186,6 +210,9 @@ export const TableExtension = Node.create({
     return [
       {
         tag: 'table[data-type="supermd-table"]',
+      },
+      {
+        tag: 'table',
       },
     ]
   },
