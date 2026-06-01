@@ -347,7 +347,9 @@ function App() {
 
   // Stable callback for editor ready
   const handleEditorReady = useCallback((editor: any) => {
-    setEditorInstance(editor)
+    Promise.resolve().then(() => {
+      setEditorInstance(editor)
+    })
   }, [])
 
   const handleWordSelectionChange = useCallback((anchor: number, head: number) => {
