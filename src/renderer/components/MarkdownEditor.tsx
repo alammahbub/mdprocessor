@@ -76,6 +76,7 @@ export const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
       markdown(),
       oneDark,
       invisibleTheme,
+      EditorView.lineWrapping,
       updateListener,
       keymap.of([...defaultKeymap, ...historyKeymap, ...foldKeymap]),
     ]
