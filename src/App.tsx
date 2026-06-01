@@ -394,6 +394,33 @@ function App() {
     }
   }, [editorInstance, viewMode])
 
+  // Synchronize selection immediately when switching view modes to ensure the cursor position is preserved
+  useEffect(() => {
+    const editor = editorInstance
+    if (!editor || editor.isDestroyed) return
+
+    isSyncingSelectionRef.current = true
+    try {
+      const currentMarkdown = latestMarkdownRef.current
+      if (viewMode === 'markdown' || viewMode === 'split') {
+        const pmSelection = editor.state.selection
+        const mdAnchor = mapProseMirrorToMarkdown(editor, pmSelection.anchor, currentMarkdown)
+        const mdHead = mapProseMirrorToMarkdown(editor, pmSelection.head, currentMarkdown)
+        setCodeSelection({ anchor: mdAnchor, head: mdHead })
+      } else if (viewMode === 'word') {
+        if (codeSelection) {
+          const pmAnchor = mapMarkdownToProseMirror(editor, codeSelection.anchor, currentMarkdown)
+          const pmHead = mapMarkdownToProseMirror(editor, codeSelection.head, currentMarkdown)
+          setWordSelection({ anchor: pmAnchor, head: pmHead })
+        }
+      }
+    } catch (err) {
+      console.warn('[View Mode Selection Sync] error:', err)
+    } finally {
+      isSyncingSelectionRef.current = false
+    }
+  }, [viewMode, editorInstance])
+
   // Collapsible Activity History sidebar states and callback
   interface ActivityItem {
     id: string
